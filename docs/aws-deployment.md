@@ -277,16 +277,19 @@ DNS propagation can take up to 48 hours.
 ## Security Checklist
 
 - [ ] IAM user with least-privilege policy (not root account)
-- [ ] SSH key stored securely, never committed to the repo
-- [ ] SSH access restricted to your IP only (port 22)
-- [ ] Gunicorn bound to `127.0.0.1` (not `0.0.0.0`)
-- [ ] Flask `debug=True` disabled in production (set `debug=False` or use Gunicorn)
-- [ ] Nginx security headers configured (X-Frame-Options, CSP, etc.)
-- [ ] Dotfiles blocked by Nginx (`.env`, `.git`)
-- [ ] HTTPS enabled with auto-renewing Let's Encrypt certificate
-- [ ] No secrets, credentials, or `.pem` files in the repository
+- [x] SSH key stored securely, never committed to the repo
+- [x] SSH access restricted to your IP only (port 22)
+- [x] Gunicorn bound to `127.0.0.1` (not `0.0.0.0`)
+- [x] Flask `debug=True` disabled in production — env-var gated (`FLASK_DEBUG`)
+- [x] Nginx security headers configured (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+- [x] Dotfiles blocked by Nginx (`.env`, `.git`)
+- [x] HTTPS enabled with auto-renewing Let's Encrypt certificate
+- [x] No secrets, credentials, or `.pem` files in the repository
 - [ ] OS packages kept up to date (`sudo dnf update -y`)
-- [ ] Flask `SECRET_KEY` set via environment variable, not hardcoded
+- [x] Flask `SECRET_KEY` set via environment variable (secure random fallback)
+- [x] Rate limiting enabled — `flask-limiter` 10 req/min on all `/api/*` endpoints
+- [x] Path traversal hardened — rejects `..` in image filenames, base dir resolved
+- [x] SRI integrity hashes on all CDN resources (KaTeX)
 
 ---
 
