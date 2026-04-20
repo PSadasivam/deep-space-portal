@@ -153,10 +153,10 @@ This avoids packaging overhead while maintaining clean separation. The science m
 
 ## Follow-Up Tasks
 
-- [ ] Initialize `deep_space_portal` as its own Git repository
-- [ ] Create GitHub repo `PSadasivam/deep-space-portal`
-- [ ] Update EC2 deployment script for new project layout
-- [ ] Update systemd service file
+- [x] Initialize `deep_space_portal` as its own Git repository
+- [x] Create GitHub repo `PSadasivam/deep-space-portal`
+- [x] Update EC2 deployment script for new project layout (`deploy_portal.sh`)
+- [x] Update systemd service file (`deep_space_portal.service` in deploy script)
 - [ ] Consider `pip install -e ../voyager1_project` for more robust imports
 - [ ] Add `getting-started.md` to portal docs
 - [ ] Add portal-specific README.md

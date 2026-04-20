@@ -1,6 +1,6 @@
 # AWS Deployment Guide
 
-Deploy the Voyager 1 Deep Space Analysis web app to an EC2 instance with Nginx, Gunicorn, and HTTPS.
+Deploy the Deep Space Portal web app to an EC2 instance with Nginx, Gunicorn, and HTTPS.
 
 ## Prerequisites
 
@@ -127,9 +127,10 @@ sudo dnf update -y
 # Install Python 3.11, pip, Nginx, Git
 sudo dnf install -y python3.11 python3.11-pip python3.11-devel nginx git
 
-# Clone the repository
+# Clone the portal and science repositories (portal imports science modules)
+git clone https://github.com/PSadasivam/deep-space-portal.git
 git clone https://github.com/PSadasivam/voyager1-analysis.git
-cd voyager1-analysis
+cd deep-space-portal
 
 # Create virtual environment with Python 3.11 and install dependencies
 python3.11 -m venv venv
@@ -148,19 +149,19 @@ pip install gunicorn
 Create `/etc/systemd/system/voyager1.service`:
 
 ```bash
-sudo tee /etc/systemd/system/voyager1.service > /dev/null <<'EOF'
+sudo tee /etc/systemd/system/deep_space_portal.service > /dev/null <<'EOF'
 [Unit]
-Description=Voyager1 Flask App (Gunicorn)
+Description=Deep Space Portal (Gunicorn)
 After=network.target
 
 [Service]
 User=ec2-user
 Group=ec2-user
-WorkingDirectory=/home/ec2-user/voyager1-analysis
-ExecStart=/home/ec2-user/voyager1-analysis/venv/bin/gunicorn \
+WorkingDirectory=/home/ec2-user/deep-space-portal
+ExecStart=/home/ec2-user/deep-space-portal/venv/bin/gunicorn \
   --workers 2 \
   --bind 127.0.0.1:8000 \
-  voyager1_web_app:app
+  app:app
 Restart=always
 RestartSec=3
 
@@ -169,14 +170,14 @@ WantedBy=multi-user.target
 EOF
 
 sudo systemctl daemon-reload
-sudo systemctl enable voyager1
-sudo systemctl start voyager1
+sudo systemctl enable deep_space_portal
+sudo systemctl start deep_space_portal
 ```
 
 Verify it is running:
 
 ```bash
-sudo systemctl status voyager1
+sudo systemctl status deep_space_portal
 curl http://127.0.0.1:8000
 ```
 
@@ -293,11 +294,15 @@ DNS propagation can take up to 48 hours.
 
 ```bash
 ssh -i voyager1-deploy.pem ec2-user@<ELASTIC_IP>
-cd voyager1-analysis
+cd deep-space-portal
 git pull origin main
 source venv/bin/activate
 pip install -r requirements.txt
-sudo systemctl restart voyager1
+sudo systemctl restart deep_space_portal
+
+# Also update the science repo if needed:
+cd ../voyager1-analysis
+git pull origin main
 ```
 
 ---
