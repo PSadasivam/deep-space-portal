@@ -1,0 +1,14 @@
+# Web framework & server
+flask
+gunicorn
+Pillow
+requests
+
+# Science modules (imported from sibling voyager1_project)
+astropy
+astroquery
+pandas
+numpy
+matplotlib
+cdflib
+scipy
