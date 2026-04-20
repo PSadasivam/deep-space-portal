@@ -1,5 +1,6 @@
 # Web framework & server
 flask
+flask-limiter
 gunicorn
 Pillow
 requests

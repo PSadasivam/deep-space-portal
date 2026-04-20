@@ -43,6 +43,8 @@ import pandas as pd
 import requests as http_requests
 
 from flask import Flask, render_template, jsonify, request, Response
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import matplotlib.dates as mdates
 
 # Import science modules from voyager1_project
@@ -70,12 +72,22 @@ except ImportError:
     _CDFLIB_AVAILABLE = False
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(32).hex())
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri='memory://'
+)
 
 @app.route('/images/<path:filename>')
 def serve_image(filename):
     """Serve images from the Images directory."""
-    from flask import send_from_directory
-    return send_from_directory(Path(__file__).parent / 'Images', filename)
+    from flask import send_from_directory, abort
+    if '..' in filename or filename.startswith('/'):
+        abort(403)
+    return send_from_directory(Path(__file__).resolve().parent / 'Images', filename)
 
 @app.route('/favicon.ico')
 def favicon():
@@ -435,6 +447,7 @@ def trajectory():
     return render_template('trajectory.html')
 
 @app.route('/api/trajectory')
+@limiter.limit('10/minute')
 def api_trajectory():
     """API endpoint for trajectory data."""
     return jsonify(create_trajectory_plot())
@@ -527,6 +540,7 @@ Sitemap: https://prabhusadasivam.com/sitemap.xml
     return Response(txt, mimetype='text/plain')
 
 @app.route('/api/plasma')
+@limiter.limit('10/minute')
 def api_plasma():
     """API endpoint for plasma wave analysis data."""
     duration = request.args.get('hours', default=24, type=int)
@@ -674,6 +688,7 @@ def create_plasma_plots(duration_hours=24, freq_range=(10, 10000)):
 
 
 @app.route('/api/density')
+@limiter.limit('10/minute')
 def api_density():
     """API endpoint for density extraction data."""
     duration = request.args.get('hours', default=48, type=int)
@@ -814,11 +829,13 @@ def create_density_plots(duration_hours=48):
 
 
 @app.route('/api/position')
+@limiter.limit('10/minute')
 def api_position():
     """API endpoint for position data."""
     return jsonify(create_position_plot())
 
 @app.route('/api/magnetometer')
+@limiter.limit('10/minute')
 def api_magnetometer():
     """API endpoint for magnetometer data."""
     days_back = request.args.get('days', default=7, type=int)
@@ -1126,6 +1143,7 @@ def space_intelligence():
 
 
 @app.route('/api/space-intelligence')
+@limiter.limit('10/minute')
 def api_space_intelligence():
     """JSON API: fetch all space-intelligence data for client-side rendering."""
     neos = _fetch_neo_data()
@@ -1150,6 +1168,7 @@ def api_space_intelligence():
 
 
 @app.route('/api/status')
+@limiter.limit('10/minute')
 def api_status():
     """API endpoint for system status."""
     return jsonify({
@@ -1166,4 +1185,4 @@ def api_status():
 if __name__ == '__main__':
     print("Starting Voyager 1 Web Analysis Dashboard...")
     print("Open your browser to: http://localhost:5000")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true', port=5000)
