@@ -109,9 +109,19 @@ if [ -f /etc/nginx/conf.d/voyager1.conf ]; then
     sudo cp /etc/nginx/conf.d/voyager1.conf /etc/nginx/conf.d/voyager1.conf.bak
 fi
 
-# The nginx config proxies to 127.0.0.1:8000 — same port, so the proxy_pass
-# doesn't change. We just rename/replace for clarity.
-sudo cp "${PORTAL_DIR}/deep_space_portal.nginx.conf" /etc/nginx/conf.d/deep_space_portal.conf
+# Only install the repo nginx config if no Certbot-managed config exists yet.
+# Certbot rewrites the config to add SSL blocks and HTTP→HTTPS redirects.
+# Overwriting it would break HTTPS.
+if [ -f /etc/nginx/conf.d/deep_space_portal.conf ]; then
+    echo "  Nginx config already exists (likely Certbot-managed) — skipping overwrite."
+elif [ -f /etc/nginx/conf.d/voyager1.conf.bak ]; then
+    echo "  Copying existing Certbot-managed voyager1.conf as deep_space_portal.conf..."
+    sudo cp /etc/nginx/conf.d/voyager1.conf.bak /etc/nginx/conf.d/deep_space_portal.conf
+else
+    echo "  No existing config found — installing from repo..."
+    sudo cp "${PORTAL_DIR}/deep_space_portal.nginx.conf" /etc/nginx/conf.d/deep_space_portal.conf
+    echo "  NOTE: Run 'sudo certbot --nginx' to enable HTTPS."
+fi
 
 # Test nginx config before proceeding
 sudo nginx -t
