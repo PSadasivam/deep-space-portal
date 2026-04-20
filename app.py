@@ -25,10 +25,15 @@ import tempfile
 import time
 from pathlib import Path
 
-# Add sibling voyager1_project to import path for science modules
-_VOYAGER1_PROJECT = Path(__file__).resolve().parent.parent / 'voyager1_project'
-if str(_VOYAGER1_PROJECT) not in sys.path:
-    sys.path.insert(0, str(_VOYAGER1_PROJECT))
+# Add sibling voyager1 science project to import path.
+# Supports both local dir name (voyager1_project) and EC2 clone name (voyager1-analysis).
+_PARENT = Path(__file__).resolve().parent.parent
+for _name in ('voyager1_project', 'voyager1-analysis'):
+    _VOYAGER1_PROJECT = _PARENT / _name
+    if _VOYAGER1_PROJECT.is_dir():
+        if str(_VOYAGER1_PROJECT) not in sys.path:
+            sys.path.insert(0, str(_VOYAGER1_PROJECT))
+        break
 
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend for web
