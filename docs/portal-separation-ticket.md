@@ -1,13 +1,4 @@
-# Ticket: Separate Web Portal from Voyager 1 Science Project
-
-**ID:** DSR-042  
-**Type:** Architectural Refactor  
-**Priority:** High  
-**Status:** In Progress  
-**Author:** Prabhu Sadasivam  
-**Date:** 2026-04-20  
-
----
+# Architectural Refactor: Build Web Portal Project; Voyager 1 Project for Science-only 
 
 ## Summary
 
