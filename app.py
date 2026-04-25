@@ -1389,6 +1389,310 @@ def api_orbital_density():
         return jsonify(error='Failed to process orbital data'), 500
 
 
+# ----------------------------------------------------------------------
+# Live Orbit 3D — server-side Keplerian propagation + scene narrator
+# ----------------------------------------------------------------------
+
+# Earth gravitational parameter (km^3/s^2) and equatorial radius (km)
+_EARTH_MU = 398600.4418
+_EARTH_R = 6378.137
+
+
+def _solve_kepler(M, e, tol=1e-6, max_iter=20):
+    """Solve Kepler's equation M = E - e*sin(E) via Newton-Raphson.
+
+    M and E in radians.  e is eccentricity (0 <= e < 1).  Returns
+    eccentric anomaly E.  Converges quickly for typical Earth orbits.
+    """
+    # Good starting guess
+    E = M if e < 0.8 else _math.pi
+    for _ in range(max_iter):
+        f = E - e * _math.sin(E) - M
+        fp = 1.0 - e * _math.cos(E)
+        dE = -f / fp
+        E += dE
+        if abs(dE) < tol:
+            break
+    return E
+
+
+def _propagate_satellite(sat, now_utc):
+    """Compute current ECI position (km) for a satellite from its OMM elements.
+
+    Uses two-body Keplerian propagation — accurate to a few km for
+    short propagation intervals (typical TLE epoch is hours to days
+    old).  Good enough for visualization; not for collision avoidance.
+
+    Returns (x, y, z) in km, or None if elements are invalid.
+    """
+    try:
+        # Required orbital elements
+        n_rev_day = float(sat['MEAN_MOTION'])         # revs/day
+        e = float(sat['ECCENTRICITY'])
+        i = _math.radians(float(sat['INCLINATION']))
+        raan = _math.radians(float(sat['RA_OF_ASC_NODE']))
+        argp = _math.radians(float(sat['ARG_OF_PERICENTER']))
+        M0 = _math.radians(float(sat['MEAN_ANOMALY']))
+        epoch_str = sat['EPOCH']
+    except (KeyError, TypeError, ValueError):
+        return None
+
+    if not (0.0 <= e < 1.0) or n_rev_day <= 0:
+        return None
+
+    # Mean motion in rad/s; semi-major axis from n
+    n = n_rev_day * 2.0 * _math.pi / 86400.0
+    a = (_EARTH_MU / (n * n)) ** (1.0 / 3.0)
+
+    # Time since epoch (seconds)
+    try:
+        # CelesTrak gives ISO-8601 without timezone; treat as UTC
+        epoch = datetime.datetime.fromisoformat(epoch_str)
+        if epoch.tzinfo is None:
+            epoch = epoch.replace(tzinfo=datetime.timezone.utc)
+    except ValueError:
+        return None
+    dt = (now_utc - epoch).total_seconds()
+
+    # Mean anomaly at current time
+    M = (M0 + n * dt) % (2.0 * _math.pi)
+
+    # Eccentric anomaly
+    E = _solve_kepler(M, e)
+
+    # True anomaly and radius
+    cos_nu = (_math.cos(E) - e) / (1.0 - e * _math.cos(E))
+    sin_nu = (_math.sqrt(1.0 - e * e) * _math.sin(E)) / (1.0 - e * _math.cos(E))
+    r = a * (1.0 - e * _math.cos(E))
+
+    # Position in perifocal frame
+    x_p = r * cos_nu
+    y_p = r * sin_nu
+
+    # Rotate perifocal -> ECI (3-1-3 rotation: argp, i, raan)
+    cos_argp, sin_argp = _math.cos(argp), _math.sin(argp)
+    cos_i, sin_i = _math.cos(i), _math.sin(i)
+    cos_raan, sin_raan = _math.cos(raan), _math.sin(raan)
+
+    # Combined rotation matrix elements (standard formulation)
+    x = (cos_raan * cos_argp - sin_raan * sin_argp * cos_i) * x_p + \
+        (-cos_raan * sin_argp - sin_raan * cos_argp * cos_i) * y_p
+    y = (sin_raan * cos_argp + cos_raan * sin_argp * cos_i) * x_p + \
+        (-sin_raan * sin_argp + cos_raan * cos_argp * cos_i) * y_p
+    z = (sin_argp * sin_i) * x_p + (cos_argp * sin_i) * y_p
+
+    return (x, y, z)
+
+
+def _classify_orbit_simple(altitude_km):
+    """Classify orbit class for live-orbit rendering (matches density page legend)."""
+    if altitude_km < 2000:
+        return 'LEO'
+    if altitude_km < 35586:
+        return 'MEO'
+    if altitude_km < 35986:
+        return 'GEO'
+    return 'HEO'
+
+
+def _compute_live_positions(satellites, max_points=5000):
+    """Compute current ECI positions for satellites with intelligent downsampling.
+
+    Returns list of {n, x, y, z, c} dicts (short keys to keep payload small).
+    'c' is orbit class: 0=LEO, 1=MEO, 2=GEO, 3=HEO.
+    """
+    if not satellites:
+        return []
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+
+    # First pass: classify everything
+    classified = {'LEO': [], 'MEO': [], 'GEO': [], 'HEO': []}
+    for sat in satellites:
+        try:
+            n_rev_day = float(sat.get('MEAN_MOTION', 0))
+            e = float(sat.get('ECCENTRICITY', 0))
+        except (TypeError, ValueError):
+            continue
+        if n_rev_day <= 0:
+            continue
+        n = n_rev_day * 2.0 * _math.pi / 86400.0
+        a = (_EARTH_MU / (n * n)) ** (1.0 / 3.0)
+        alt = a * (1.0 - e) - _EARTH_R  # perigee altitude
+        if e > 0.25:
+            cls = 'HEO'
+        else:
+            cls = _classify_orbit_simple(alt)
+        classified[cls].append(sat)
+
+    # Downsample LEO (mostly Starlink) to fit budget; keep all MEO/GEO/HEO
+    keep_meo = classified['MEO']
+    keep_geo = classified['GEO']
+    keep_heo = classified['HEO']
+    leo_budget = max(0, max_points - len(keep_meo) - len(keep_geo) - len(keep_heo))
+    leo_all = classified['LEO']
+    if len(leo_all) > leo_budget and leo_budget > 0:
+        step = len(leo_all) / leo_budget
+        keep_leo = [leo_all[int(i * step)] for i in range(leo_budget)]
+    else:
+        keep_leo = leo_all
+
+    class_code = {'LEO': 0, 'MEO': 1, 'GEO': 2, 'HEO': 3}
+    out = []
+    for cls, group in (('LEO', keep_leo), ('MEO', keep_meo),
+                       ('GEO', keep_geo), ('HEO', keep_heo)):
+        code = class_code[cls]
+        for sat in group:
+            pos = _propagate_satellite(sat, now)
+            if pos is None:
+                continue
+            x, y, z = pos
+            out.append({
+                'n': sat.get('OBJECT_NAME', '')[:40],
+                'x': round(x, 1),
+                'y': round(y, 1),
+                'z': round(z, 1),
+                'c': code,
+            })
+    return out
+
+
+def _generate_scene_narrative(stats, neos, kp_info):
+    """Templated scene narrator — Option A (no LLM, deterministic).
+
+    Builds a 2-3 sentence narrative from cached structured data.  Pure
+    Python; no external calls; identical input -> identical output.
+    """
+    parts = []
+
+    total = stats.get('total_active', 0)
+    leo = stats.get('orbit_distribution', {}).get('LEO', 0)
+    geo = stats.get('orbit_distribution', {}).get('GEO', 0)
+    if total:
+        parts.append(
+            f"What you're seeing is real. {total:,} active satellites are "
+            f"circling Earth right now — {leo:,} hugging Low Earth Orbit, "
+            f"{geo:,} fixed in the distant geostationary ring 35,786 km out."
+        )
+
+    # Top operator hook
+    top_ops = stats.get('top_operators', [])
+    if top_ops:
+        leader = top_ops[0]
+        share = (leader['count'] / total * 100) if total else 0
+        if share >= 30:
+            parts.append(
+                f"{leader['name']} alone accounts for "
+                f"{share:.0f}% of active satellites — concentrated in the 540 km band."
+            )
+
+    # NEO hook — pick the closest hazardous, otherwise the closest of any
+    if neos:
+        haz = [n for n in neos if n.get('is_hazardous')]
+        nearest = haz[0] if haz else neos[0]
+        au = nearest.get('miss_au_raw', 999)
+        lunar = nearest.get('miss_lunar', '?')
+        date = nearest.get('close_approach_date', 'this week')
+        if nearest.get('is_hazardous') and au < 0.05:
+            parts.append(
+                f"One potentially hazardous asteroid passes inside {lunar} "
+                f"lunar distances on {date} — close, but cataloged."
+            )
+        else:
+            parts.append(
+                f"Closest asteroid this week: {nearest.get('name', '?')} "
+                f"at {lunar} lunar distances."
+            )
+
+    # Space weather hook
+    if kp_info:
+        kp = kp_info.get('kp_value')
+        if kp is not None:
+            if kp >= 5:
+                parts.append(
+                    f"Geomagnetic conditions are elevated (Kp {kp:.0f}) — "
+                    f"satellite drag and HF radio are seeing it."
+                )
+            elif kp >= 3:
+                parts.append(
+                    f"Geomagnetic activity is unsettled (Kp {kp:.0f}); "
+                    f"baseline drag remains nominal."
+                )
+            else:
+                parts.append(
+                    f"Geomagnetic conditions are quiet (Kp {kp:.0f}). "
+                    f"The orbital environment is busy but stable."
+                )
+
+    if not parts:
+        return ("The orbital environment is being observed. Live data will "
+                "appear as soon as the upstream sources respond.")
+
+    return ' '.join(parts)
+
+
+def _fetch_neo_data_safe():
+    """Fetch NEO data, returning [] on any failure (used by /live-orbit)."""
+    try:
+        return _fetch_neo_data()
+    except Exception:
+        return []
+
+
+@app.route('/live-orbit')
+def live_orbit():
+    """Live Orbit 3D page — shell loads instantly, scene populated via API."""
+    return render_template('live-orbit.html')
+
+
+@app.route('/api/live-orbit-data')
+@limiter.limit('10/minute')
+def api_live_orbit_data():
+    """Combined JSON endpoint for the 3D scene.
+
+    Bundles satellite positions + NEO list + summary stats + narrator
+    into one response so the client makes a single fetch per refresh.
+    """
+    try:
+        satellites = _fetch_celestrak_active()
+        positions = _compute_live_positions(satellites or [], max_points=5000)
+        stats = _process_orbital_data(satellites or [])
+        neos = _fetch_neo_data_safe()[:10]
+        kp_info = _fetch_kp_index() or {}
+
+        narrative = _generate_scene_narrative(stats, neos, kp_info)
+
+        # Trim NEO payload to fields the client needs
+        neos_lite = [{
+            'name': n['name'],
+            'miss_au': n['miss_au_raw'],
+            'miss_lunar': n['miss_lunar'],
+            'velocity_kph': n['velocity_kph'],
+            'date': n['close_approach_date'],
+            'hazardous': n['is_hazardous'],
+        } for n in neos]
+
+        return jsonify({
+            'positions': positions,
+            'neos': neos_lite,
+            'narrative': narrative,
+            'stats': {
+                'total_active': stats.get('total_active', 0),
+                'orbit_distribution': stats.get('orbit_distribution', {}),
+                'top_operator': (stats.get('top_operators') or [{}])[0],
+                'kp': kp_info.get('kp_value'),
+                'kp_label': kp_info.get('label'),
+                'rendered_count': len(positions),
+            },
+            'refreshed': datetime.datetime.now(
+                datetime.timezone.utc).strftime('%B %d, %Y %H:%M UTC'),
+            'earth_radius_km': _EARTH_R,
+        })
+    except Exception as exc:
+        print(f"[live-orbit] data fetch failed: {exc}")
+        return jsonify(error='Live orbit data temporarily unavailable'), 503
+
+
 @app.route('/api/status')
 @limiter.limit('10/minute')
 def api_status():

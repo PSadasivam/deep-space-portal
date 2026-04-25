@@ -609,3 +609,56 @@ The portal is a **public-facing Flask web application** deployed on AWS EC2, ser
 | In-memory cache with stale fallback (15-min TTL) | ✅ Applied |
 | Generic error responses (no stack traces to client) | ✅ Applied |
 | No new secrets introduced (CelesTrak requires no API key) | ✅ Verified |
+
+### 13.9 Live Orbit 3D — Threat Addendum
+
+*Added for Phase 3: Live Orbit 3D visualization page.*
+
+#### New Assets
+
+| Asset | Description | Risk if Compromised |
+|-------|-------------|---------------------|
+| `live-orbit.html` | Three.js 3D scene with NASA Earth textures, satellite points, NEO arcs, scene narrator | XSS via satellite/NEO names; CDN/texture supply-chain compromise |
+| `/api/live-orbit-data` | JSON API returning sampled positions (≤5,000), NEO list, narrative, stats | DoS via expensive CelesTrak fetch + per-request Keplerian propagation |
+| Three.js 0.160.0 CDN (jsdelivr) | Client-side 3D engine loaded via importmap | Script injection if CDN compromised |
+| `threejs.org/examples/textures/planets/*` | NASA-derived Blue Marble Earth textures (CC0) | Texture replacement if upstream compromised |
+| Server-side Keplerian propagator (`_propagate_satellite`) | Two-body position computation per satellite | CPU exhaustion if catalog grows unbounded |
+| Templated scene narrator (`_generate_scene_narrative`) | Server-rendered paragraph from current data | Narrative injection if upstream names unescaped |
+
+#### Threat Analysis
+
+| ID | Category | Threat | Likelihood | Impact | Mitigation |
+|----|----------|--------|:----------:|:------:|------------|
+| WLO-1 | Tampering | Malicious satellite or NEO name containing HTML/JS injected into DOM via narrator or HUD | Very Low | High | `esc()` escapes all dynamic strings before insertion; narrator built server-side from sanitized fields only |
+| WLO-2 | Tampering | jsdelivr CDN compromise serves malicious `three.module.js` | Very Low | Critical | Pinned exact version `three@0.160.0`; importmap reduces loader complexity. **Tradeoff documented:** SRI not used because module-graph SRI is not yet broadly supported with importmaps; risk accepted given vendor reputation and version pinning |
+| WLO-3 | Tampering | `threejs.org` texture host serves modified imagery | Very Low | Low | Textures are decorative only (no security boundary); failure mode is visual artifact, not RCE |
+| WLO-4 | DoS | Burst of `/api/live-orbit-data` requests forces repeated propagation of full catalog (~12k satellites × Newton-Raphson) | Medium | Medium | `flask-limiter` 10/min; reuses 15-min CelesTrak cache; downsampled to ≤5,000 points before serialization |
+| WLO-5 | DoS | Client requests with no rendering budget (low-end device) crash tab | Low | Low | Hard cap of 5,000 rendered points; `prefers-reduced-motion` disables animation; pixel ratio capped at 2 |
+| WLO-6 | Info Disclosure | Propagation error reveals stack trace or TLE field internals | Low | Low | Try/except wraps each satellite; route returns generic `{error}` JSON; details logged server-side only |
+| WLO-7 | SSRF | Attacker manipulates upstream URL via crafted parameters | N/A | N/A | All upstream URLs are hardcoded constants; no user input flows into URL construction |
+| WLO-8 | Availability | CelesTrak / NEO / SWPC unavailable simultaneously | Medium | Low | Each fetch wrapped in try/except; partial responses still render scene; client shows "live data unavailable" narrator fallback |
+| WLO-9 | Numerical | Kepler solver fails to converge (e.g., e≥1 hyperbolic) | Low | Low | Iteration capped at 30; bad satellites silently skipped from output array |
+| WLO-10 | Tampering | Compromised narrator template injects unsafe content | Very Low | Medium | Narrator is pure Python f-strings over numeric stats and pre-escaped name fields; no eval, no template engine |
+
+#### Controls Applied
+
+| Control | Status |
+|---------|--------|
+| Rate limiting (`@limiter.limit('10/minute')`) on `/api/live-orbit-data` | ✅ Applied |
+| Three.js version pinned (`three@0.160.0` via importmap) | ✅ Applied |
+| `esc()` output escaping on all dynamic DOM content | ✅ Applied |
+| Position cap (≤5,000 rendered points) — DoS protection | ✅ Applied |
+| Reuses existing CelesTrak cache (no duplicate upstream load) | ✅ Applied |
+| Generic error responses (no stack traces to client) | ✅ Applied |
+| `prefers-reduced-motion` respected (accessibility + perf) | ✅ Applied |
+| Pixel-ratio capped (`Math.min(devicePixelRatio, 2)`) | ✅ Applied |
+| Per-satellite try/except in propagation loop | ✅ Applied |
+| Newton-Raphson iteration cap (30) | ✅ Applied |
+| Narrator built server-side, no LLM call (no prompt-injection surface) | ✅ Applied |
+| No new secrets introduced (all upstream APIs are public, key-free) | ✅ Verified |
+
+#### Residual Risk
+
+- **SRI tradeoff (WLO-2):** Importmap-based ES module loading does not yet have broad SRI support. Risk is mitigated by version pinning and vendor reputation but is not zero. Acceptable for a personal portal serving non-sensitive public data.
+- **Texture host availability (WLO-3):** `threejs.org` examples host is not under our control. If unavailable, scene renders without textures (unlit gray sphere); page remains functional.
+
