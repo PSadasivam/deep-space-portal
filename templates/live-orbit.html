@@ -577,7 +577,7 @@
                 </p>
                 <h3>How the Scene Updates</h3>
                 <p>
-                    Positions are computed server-side from current orbital elements every time you load the page, then refreshed every few minutes. The Earth rotates slowly for visual effect; the satellites are placed at their real geometric positions, not animated paths.
+                    Positions are computed server-side from current orbital elements every time you load the page, then refreshed every few minutes. Earth's orientation and the day/night terminator are driven by real UTC and solar declination — the sunlit hemisphere you see <em>is</em> the sunlit Earth right now, accurate to the actual subsolar point.
                 </p>
                 <h3>The Narrator</h3>
                 <p>
@@ -741,17 +741,45 @@
 
         // --- Lighting
         const sunLight = new THREE.DirectionalLight(0xffffff, 1.05);
-        // Approximate Sun direction from current UTC hour (rough, good enough)
-        function setSunDirection() {
+
+        // Real Sun position + Earth orientation, both driven by current UTC.
+        // Using a simple subsolar model:
+        //   subsolar longitude = -15 * (UTC_hours - 12)   (deg east; sun over Greenwich at 12:00 UTC)
+        //   solar declination  ~= 23.44 * sin(2 pi (DOY - 81) / 365.25)
+        // We then orient Earth's mesh so the subsolar point on its surface actually
+        // faces the sun light, which means the day/night terminator falls on the
+        // correct geographic boundary at this exact moment.
+        function updateSunAndEarth() {
             const now = new Date();
-            const hours = now.getUTCHours() + now.getUTCMinutes() / 60;
-            // Sun at 12 UTC is roughly over 0° longitude meridian (near +X). At 0 UTC, near -X.
-            const angle = ((hours - 12) / 24) * Math.PI * 2;
-            sunLight.position.set(Math.cos(angle) * 5, 1.2, Math.sin(angle) * 5);
+            const hoursUTC = now.getUTCHours()
+                            + now.getUTCMinutes() / 60
+                            + now.getUTCSeconds() / 3600;
+            const lonSubDeg = -15 * (hoursUTC - 12);  // east-positive
+            const lonSubRad = lonSubDeg * Math.PI / 180;
+
+            // Day-of-year (1..365/366)
+            const yearStart = Date.UTC(now.getUTCFullYear(), 0, 0);
+            const dayMs = 86400000;
+            const dayOfYear = Math.floor((now.getTime() - yearStart) / dayMs);
+            const declRad = (23.44 * Math.PI / 180)
+                            * Math.sin(2 * Math.PI * (dayOfYear - 81) / 365.25);
+
+            // Sun direction in world: equator-ish along +X, lifted by declination.
+            sunLight.position.set(
+                Math.cos(declRad) * 50,
+                Math.sin(declRad) * 50,
+                0
+            );
+
+            // Earth orientation so its subsolar point lines up with the sun.
+            // Derived: rotation.y = lonSub - pi/2  (texture u=0.5 = Greenwich at -Z)
+            const yRot = lonSubRad - Math.PI / 2;
+            earth.rotation.y = yRot;
+            clouds.rotation.y = yRot;
         }
-        setSunDirection();
+        updateSunAndEarth();
         scene.add(sunLight);
-        scene.add(new THREE.AmbientLight(0x335577, 0.45));
+        scene.add(new THREE.AmbientLight(0x223344, 0.18));
 
         // --- Star field (procedural, ~3000 stars)
         function makeStars() {
@@ -799,8 +827,10 @@
         const earth = new THREE.Mesh(earthGeom, earthMat);
         scene.add(earth);
 
-        // Slow Earth rotation (visual flair, not physical)
-        const EARTH_SPIN_RATE = REDUCED_MOTION ? 0 : (2 * Math.PI / 120); // 1 turn / 120s
+        // Slow Earth rotation: now driven by real UTC via updateSunAndEarth().
+        // The artificial 120-second spin has been removed so the day/night
+        // terminator stays on the correct geographic boundary.
+        const EARTH_SPIN_RATE = 0;
 
         // --- Cloud layer
         const cloudGeom = new THREE.SphereGeometry(SCENE_EARTH_R * 1.005, 64, 64);
@@ -978,12 +1008,10 @@
         let lastT = performance.now();
         function animate(t) {
             requestAnimationFrame(animate);
-            const dt = (t - lastT) / 1000;
             lastT = t;
-            if (!REDUCED_MOTION) {
-                earth.rotation.y += EARTH_SPIN_RATE * dt;
-                clouds.rotation.y += EARTH_SPIN_RATE * 1.05 * dt;
-            }
+            // Earth orientation is driven by real UTC (see updateSunAndEarth).
+            // Camera auto-rotation in OrbitControls supplies the motion, so the
+            // scene still feels alive without falsifying geography.
             controls.update();
             renderer.render(scene, camera);
         }
@@ -1120,8 +1148,8 @@
         loadData();
         setInterval(loadData, POLL_INTERVAL_MS);
 
-        // --- Refresh sun direction every minute
-        setInterval(setSunDirection, 60 * 1000);
+        // --- Refresh sun direction + Earth orientation every minute
+        setInterval(updateSunAndEarth, 60 * 1000);
 
         // Scroll to top
         const scrollBtn = document.getElementById('scrollTopBtn');
