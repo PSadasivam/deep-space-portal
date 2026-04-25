@@ -13,3 +13,6 @@ numpy
 matplotlib
 cdflib
 scipy
+
+# Test dependencies (dev only)
+pytest
