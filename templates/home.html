@@ -758,7 +758,13 @@
                         <a href="/dashboard">Magnetometer</a>
                     </div>
                 </div>
-                <a href="/space-intelligence" class="cta-trigger cta-trigger--intel">Space Intelligence</a>
+                <div class="cta-group" onclick="this.classList.toggle('open')">
+                    <a href="/space-intelligence" class="cta-trigger cta-trigger--intel" onclick="event.stopPropagation()">Space Intelligence</a><span class="cta-caret" onclick="event.stopPropagation(); this.parentElement.classList.toggle('open')">&#9660;</span>
+                    <div class="cta-dropdown">
+                        <a href="/space-intelligence">NEOs & Space Weather</a>
+                        <a href="/orbital-density">Orbital Density</a>
+                    </div>
+                </div>
                 <div class="cta-group" onclick="this.classList.toggle('open')">
                     <a href="/atlas" class="cta-trigger cta-trigger--research" onclick="event.stopPropagation()">Deep Research</a><span class="cta-caret" onclick="event.stopPropagation(); this.parentElement.classList.toggle('open')">&#9660;</span>
                     <div class="cta-dropdown">

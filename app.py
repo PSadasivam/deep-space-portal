@@ -857,7 +857,19 @@ def _si_cached_get(url, key, params=None):
     if key in _SI_CACHE and now - _SI_CACHE[key]['ts'] < _SI_CACHE_TTL:
         return _SI_CACHE[key]['data']
     try:
-        r = http_requests.get(url, params=params, timeout=15)
+        headers = {
+            'User-Agent': 'DeepSpacePortal/1.0 (research; +https://prabhusadasivam.com)',
+            'Accept': 'application/json',
+        }
+        r = http_requests.get(url, params=params, headers=headers, timeout=15)
+        # CelesTrak returns 403 when data hasn't changed since last download.
+        # Treat this as a cache-hit rather than an error.
+        if r.status_code == 403 and 'has not updated' in r.text:
+            if key in _SI_CACHE:
+                _SI_CACHE[key]['ts'] = now  # extend TTL
+                return _SI_CACHE[key]['data']
+            # No cache yet — return None, page will show fallback
+            return None
         r.raise_for_status()
         data = r.json()
         _SI_CACHE[key] = {'data': data, 'ts': now}
@@ -1167,6 +1179,216 @@ def api_space_intelligence():
     )
 
 
+# ---------------------------------------------------------------------------
+# Orbital Density Intelligence: CelesTrak data helpers
+# ---------------------------------------------------------------------------
+
+import math as _math
+
+_EARTH_RADIUS_KM = 6371.0  # Mean Earth radius
+_GEO_ALTITUDE_KM = 35786.0  # Geostationary altitude
+
+
+def _mean_motion_to_altitude(mean_motion, eccentricity=0.0):
+    """Convert mean motion (rev/day) to approximate altitude (km) above Earth."""
+    if not mean_motion or mean_motion <= 0:
+        return None
+    mu = 398600.4418  # Earth gravitational parameter km^3/s^2
+    period_sec = 86400.0 / mean_motion
+    semi_major = (mu * (period_sec / (2 * _math.pi)) ** 2) ** (1.0 / 3.0)
+    altitude = semi_major * (1.0 - eccentricity) - _EARTH_RADIUS_KM  # perigee altitude
+    return round(altitude, 1) if altitude > 0 else None
+
+
+def _classify_orbit(altitude_km, eccentricity):
+    """Classify orbit regime from perigee altitude and eccentricity."""
+    if eccentricity and eccentricity > 0.25:
+        return 'HEO'
+    if altitude_km is None:
+        return 'Other'
+    if altitude_km < 2000:
+        return 'LEO'
+    if altitude_km < 35586:
+        return 'MEO'
+    if altitude_km <= 35986:
+        return 'GEO'
+    return 'Other'
+
+
+def _extract_operator(name):
+    """Heuristic operator extraction from OBJECT_NAME."""
+    if not name:
+        return 'Unknown'
+    upper = name.upper().strip()
+    if upper.startswith('STARLINK'):
+        return 'SpaceX Starlink'
+    if upper.startswith('ONEWEB'):
+        return 'OneWeb'
+    if upper.startswith('IRIDIUM'):
+        return 'Iridium'
+    if upper.startswith('COSMOS') or upper.startswith('KOSMOS'):
+        return 'Russia (Cosmos)'
+    if upper.startswith('GPS'):
+        return 'US GPS'
+    if upper.startswith('GLOBALSTAR'):
+        return 'Globalstar'
+    if upper.startswith('ORBCOMM'):
+        return 'ORBCOMM'
+    if upper.startswith('BEIDOU') or upper.startswith('CZ-'):
+        return 'China (BeiDou/CZ)'
+    if upper.startswith('GALILEO'):
+        return 'EU Galileo'
+    if upper.startswith('INTELSAT'):
+        return 'Intelsat'
+    if upper.startswith('SES'):
+        return 'SES'
+    if upper.startswith('TELESAT'):
+        return 'Telesat'
+    if upper.startswith('YAOGAN') or upper.startswith('SHIYAN') or upper.startswith('SHIJIAN'):
+        return 'China (Military/Civil)'
+    if upper.startswith('GOES') or upper.startswith('NOAA'):
+        return 'NOAA'
+    if upper.startswith('LANDSAT') or upper.startswith('TERRA') or upper.startswith('AQUA'):
+        return 'NASA'
+    if upper.startswith('NAVSTAR'):
+        return 'US GPS'
+    return 'Other'
+
+
+def _fetch_celestrak_active():
+    """Fetch active satellite catalog from CelesTrak GP API.
+
+    CelesTrak throttles GROUP=active to once per 2-hour update cycle (403
+    with 'has not updated' message).  On a cold start with no in-memory
+    cache the primary URL will fail.  As a fallback, we merge several
+    smaller group queries that are not subject to the same restriction.
+    """
+    raw = _si_cached_get(
+        'https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=json',
+        'celestrak_active')
+    if raw and isinstance(raw, list):
+        return raw
+
+    # Fallback: fetch smaller groups and merge (no dedup needed for charts)
+    # Use NAME=STARLINK instead of GROUP=starlink because the GROUP
+    # endpoint has a per-IP 2-hour cooldown that blocks cold starts.
+    _FALLBACK_GROUPS = [
+        'oneweb', 'stations', 'weather', 'geo',
+        'resource', 'science', 'gnss', 'iridium', 'globalstar',
+        'amateur', 'military',
+    ]
+    merged = []
+    # Starlink via NAME query (not subject to GROUP rate limit)
+    starlink_part = _si_cached_get(
+        'https://celestrak.org/NORAD/elements/gp.php?NAME=STARLINK&FORMAT=json',
+        'celestrak_starlink_name')
+    if starlink_part and isinstance(starlink_part, list):
+        merged.extend(starlink_part)
+    for grp in _FALLBACK_GROUPS:
+        part = _si_cached_get(
+            f'https://celestrak.org/NORAD/elements/gp.php?GROUP={grp}&FORMAT=json',
+            f'celestrak_{grp}')
+        if part and isinstance(part, list):
+            merged.extend(part)
+    if merged:
+        print(f"[orbital-density] fallback: merged {len(merged)} sats from {len(_FALLBACK_GROUPS)} groups")
+        return merged
+    return None
+
+
+def _process_orbital_data(satellites):
+    """Process raw CelesTrak satellite list into aggregated stats."""
+    orbit_counts = {'LEO': 0, 'MEO': 0, 'GEO': 0, 'HEO': 0, 'Other': 0}
+    operator_counts = {}
+    altitude_bins = {}  # bin_start -> count
+    starlink_count = 0
+    starlink_altitudes = {}
+    total = 0
+
+    for sat in satellites:
+        name = sat.get('OBJECT_NAME', '')
+        mm = sat.get('MEAN_MOTION')
+        ecc = sat.get('ECCENTRICITY', 0.0)
+        try:
+            mm = float(mm)
+            ecc = float(ecc)
+        except (TypeError, ValueError):
+            continue
+
+        altitude = _mean_motion_to_altitude(mm, ecc)
+        orbit_class = _classify_orbit(altitude, ecc)
+        orbit_counts[orbit_class] = orbit_counts.get(orbit_class, 0) + 1
+        total += 1
+
+        # Operator
+        op = _extract_operator(name)
+        operator_counts[op] = operator_counts.get(op, 0) + 1
+
+        # Altitude histogram (100 km bins, up to 2000 km for LEO detail)
+        if altitude is not None and 0 < altitude <= 2000:
+            bin_start = int(altitude // 100) * 100
+            altitude_bins[bin_start] = altitude_bins.get(bin_start, 0) + 1
+
+        # Starlink
+        if name.upper().startswith('STARLINK'):
+            starlink_count += 1
+            if altitude is not None:
+                shell = int(altitude // 10) * 10  # 10 km bins for shells
+                starlink_altitudes[shell] = starlink_altitudes.get(shell, 0) + 1
+
+    # Sort operators by count, top 10
+    top_operators = sorted(operator_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+
+    # Sort altitude bins
+    sorted_alt = sorted(altitude_bins.items(), key=lambda x: x[0])
+
+    # Starlink shell breakdown (top 5 altitude bands)
+    starlink_shells = sorted(starlink_altitudes.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    return {
+        'total_active': total,
+        'orbit_distribution': orbit_counts,
+        'top_operators': [{'name': op, 'count': cnt} for op, cnt in top_operators],
+        'altitude_histogram': {
+            'labels': [f"{b}-{b+100}" for b, _ in sorted_alt],
+            'values': [c for _, c in sorted_alt],
+        },
+        'starlink': {
+            'count': starlink_count,
+            'shells': [{'altitude_km': alt, 'count': cnt} for alt, cnt in starlink_shells],
+        },
+    }
+
+
+@app.route('/orbital-density')
+def orbital_density():
+    """Orbital Density Intelligence page — shell loads instantly, data via API."""
+    return render_template('orbital-density.html')
+
+
+@app.route('/api/orbital-density')
+@limiter.limit('10/minute')
+def api_orbital_density():
+    """JSON API: fetch orbital density data for client-side rendering."""
+    try:
+        satellites = _fetch_celestrak_active()
+        if not satellites:
+            return jsonify(error='Satellite data temporarily unavailable'), 503
+
+        data = _process_orbital_data(satellites)
+        data['refreshed'] = datetime.datetime.now(
+            datetime.timezone.utc).strftime('%B %d, %Y %H:%M UTC')
+
+        # Cross-reference Kp for geomagnetic drag context
+        kp_info = _fetch_kp_index()
+        if kp_info:
+            data['kp_info'] = kp_info
+
+        return jsonify(**data)
+    except Exception:
+        return jsonify(error='Failed to process orbital data'), 500
+
+
 @app.route('/api/status')
 @limiter.limit('10/minute')
 def api_status():
@@ -1178,7 +1400,8 @@ def api_status():
         'data_sources': [
             'NASA JPL HORIZONS (Position)',
             'NASA SPDF Archives (Magnetometer)',
-            'Realistic Synthetic Fallback'
+            'Realistic Synthetic Fallback',
+            'CelesTrak GP API (Orbital Density)',
         ]
     })
 

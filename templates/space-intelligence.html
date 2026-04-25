@@ -424,7 +424,13 @@
                             <a href="/dashboard">Magnetometer</a>
                         </div>
                     </div>
-                    <a href="/space-intelligence" class="active">Space Intelligence</a>
+                    <div class="nav-group" onclick="this.classList.toggle('open')">
+                        <a href="/space-intelligence" class="nav-group-label active" onclick="event.stopPropagation()">Space Intelligence</a><span class="nav-caret" onclick="event.stopPropagation(); this.parentElement.classList.toggle('open')">&#9660;</span>
+                        <div class="nav-dropdown">
+                            <a href="/space-intelligence" class="active">NEOs & Space Weather</a>
+                            <a href="/orbital-density">Orbital Density</a>
+                        </div>
+                    </div>
                     <div class="nav-group" onclick="this.classList.toggle('open')">
                         <a href="/atlas" class="nav-group-label" onclick="event.stopPropagation()">Deep Research</a><span class="nav-caret" onclick="event.stopPropagation(); this.parentElement.classList.toggle('open')">&#9660;</span>
                         <div class="nav-dropdown">
@@ -541,8 +547,8 @@
             </div>
             <div class="journey-next">
                 <div class="journey-label">Continue the Journey →</div>
-                <a href="/atlas">3I/ATLAS</a>
-                <div class="journey-teaser">Tracking the third confirmed interstellar visitor</div>
+                <a href="/orbital-density">Orbital Density</a>
+                <div class="journey-teaser">Mapping congestion in Earth's orbital environment</div>
             </div>
         </div>
 

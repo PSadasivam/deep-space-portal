@@ -389,7 +389,7 @@ Before publishing `deep_space_db` as a public GitHub repository:
 
 *Added 2026-04-20 after portal separation (DSR-042, ref PSadasivam/deep-space-portal#1).*
 
-The portal is a **public-facing Flask web application** deployed on AWS EC2, serving 12 HTML pages and 7 API endpoints at `https://prabhusadasivam.com`. The GitHub repository `PSadasivam/deep-space-portal` is also public.
+The portal is a **public-facing Flask web application** deployed on AWS EC2, serving 13 HTML pages and 9 API endpoints at `https://prabhusadasivam.com`. The GitHub repository `PSadasivam/deep-space-portal` is also public.
 
 ### 13.1 Portal Architecture
 
@@ -434,6 +434,7 @@ The portal is a **public-facing Flask web application** deployed on AWS EC2, ser
 | **TB-P2: Nginx → Gunicorn** | Reverse proxy → WSGI | HTTP (loopback) | Loopback only |
 | **TB-P3: Flask → Science modules** | `app.py` → `voyager1-analysis/` | `sys.path` import | File system permissions |
 | **TB-P4: Flask → NASA APIs** | `app.py` → `api.nasa.gov` | HTTPS | NASA API key (query param) |
+| **TB-P4b: Flask → CelesTrak API** | `app.py` → `celestrak.org` | HTTPS | None (public, no auth) |
 | **TB-P5: Flask → File system** | `/images/<path:filename>` → `Images/` | `send_from_directory` | Flask path checks |
 
 ### 13.3 Portal Threat Analysis (STRIDE)
@@ -572,3 +573,39 @@ The portal is a **public-facing Flask web application** deployed on AWS EC2, ser
 - [x] **SRI hashes on CDN resources** — *fixed in commit 279b57f*
 - [x] **GitHub secret scanning enabled** — *enabled with push protection on all 3 repos*
 - [x] **Dependabot alerts enabled** — *enabled on all 3 repos*
+
+### 13.8 Orbital Density Intelligence — Threat Addendum
+
+*Added 2026-04-24 for Phase 2: Satellite & Orbital Density page.*
+
+#### New Assets
+
+| Asset | Description | Risk if Compromised |
+|-------|-------------|---------------------|
+| `orbital-density.html` | Client-side template with Chart.js visualizations | XSS if upstream data injected unsafely |
+| `/api/orbital-density` | JSON API returning satellite catalog aggregations | DoS via expensive CelesTrak fetch |
+| CelesTrak GP API (external) | Upstream satellite catalog data | Data poisoning, availability loss |
+| Chart.js CDN (external) | Client-side charting library | Script injection if CDN compromised |
+
+#### Threat Analysis
+
+| ID | Category | Threat | Likelihood | Impact | Mitigation |
+|----|----------|--------|:----------:|:------:|------------|
+| WOD-1 | Tampering | CelesTrak returns malicious satellite names containing `<script>` | Very Low | High | `esc()` helper escapes all dynamic content before DOM insertion |
+| WOD-2 | Tampering | Chart.js CDN compromised, serves malicious JS | Very Low | Critical | SRI integrity hash on `<script>` tag; `crossorigin="anonymous"` |
+| WOD-3 | DoS | Repeated `/api/orbital-density` requests trigger upstream CelesTrak flood | Medium | Medium | `flask-limiter` 10/min; 15-min in-memory cache absorbs bursts |
+| WOD-4 | Info Disclosure | API error reveals internal file paths or CelesTrak URL | Low | Low | Generic error message returned; details logged server-side only |
+| WOD-5 | SSRF | Attacker manipulates CelesTrak URL construction | N/A | N/A | URL is hardcoded constant — no user input in URL construction |
+| WOD-6 | Availability | CelesTrak API unavailable | Medium | Medium | Stale-cache fallback returns last-known-good data; page shows "unavailable" message |
+
+#### Controls Applied
+
+| Control | Status |
+|---------|--------|
+| Rate limiting (`@limiter.limit('10/minute')`) on `/api/orbital-density` | ✅ Applied |
+| SRI integrity hash on Chart.js CDN script | ✅ Applied |
+| `esc()` output escaping on all dynamic DOM content | ✅ Applied |
+| Hardcoded upstream URL (no user-controlled parameters) | ✅ Applied |
+| In-memory cache with stale fallback (15-min TTL) | ✅ Applied |
+| Generic error responses (no stack traces to client) | ✅ Applied |
+| No new secrets introduced (CelesTrak requires no API key) | ✅ Verified |
