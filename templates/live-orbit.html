@@ -777,7 +777,9 @@
             earth.rotation.y = yRot;
             clouds.rotation.y = yRot;
         }
-        updateSunAndEarth();
+        // NOTE: do NOT call updateSunAndEarth() here — earth/clouds meshes
+        // are constructed below. We invoke it once after they're added to
+        // the scene, then again on a 60-second interval.
         scene.add(sunLight);
         scene.add(new THREE.AmbientLight(0x223344, 0.18));
 
@@ -840,6 +842,9 @@
         });
         const clouds = new THREE.Mesh(cloudGeom, cloudMat);
         scene.add(clouds);
+
+        // Now that earth + clouds exist, set their orientation from real UTC.
+        updateSunAndEarth();
 
         // --- Atmospheric glow (custom shader, back-side rim)
         const atmoGeom = new THREE.SphereGeometry(SCENE_EARTH_R * 1.10, 64, 64);
