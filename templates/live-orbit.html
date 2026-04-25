@@ -163,6 +163,10 @@
         #sceneCanvas { display: block; width: 100%; height: 100%; cursor: grab; }
         #sceneCanvas:active { cursor: grabbing; }
 
+        /* Fullscreen: scene wrapper fills the entire screen */
+        .scene-wrap:fullscreen { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+        .scene-wrap:-webkit-full-screen { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+
         /* Loading overlay inside scene */
         .scene-loading {
             position: absolute; inset: 0;
@@ -268,6 +272,7 @@
         }
         .zoom-btn:hover { border-color: #4ecdc4; color: #fff; transform: scale(1.08); }
         .zoom-btn:active { transform: scale(0.95); }
+        .zoom-btn svg { width: 16px; height: 16px; fill: currentColor; }
         .zoom-hint {
             font-size: 0.65em;
             color: #888;
@@ -275,6 +280,29 @@
             margin-top: 2px;
             letter-spacing: 0.5px;
             text-transform: uppercase;
+        }
+
+        /* Inline legend strip (bottom-left of scene) */
+        .scene-legend {
+            position: absolute;
+            bottom: 18px; left: 18px;
+            display: flex; flex-direction: column; gap: 4px;
+            background: rgba(10,15,40,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.72em;
+            color: #ccc;
+            z-index: 4;
+            max-width: 220px;
+            line-height: 1.5;
+        }
+        .scene-legend-row { display: flex; align-items: center; gap: 8px; }
+        .scene-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .scene-legend-line { width: 14px; height: 2px; flex-shrink: 0; }
+        @media (max-width: 768px) {
+            .scene-legend { display: none; }
         }
 
         /* ---------- "What you're seeing" cards ---------- */
@@ -539,9 +567,13 @@
                 <p>
                     The faint colored circles around Earth aren't decoration — they're <em>shells</em>. The teal ring marks the LEO ceiling (~2,000 km). The gold ring is the GPS / MEO band (~20,200 km). The red ring is the iconic geostationary belt (~35,786 km), where every weather and broadcast satellite sits motionless above the equator. Almost everything humanity has ever put in orbit lives in one of those three shells. Toggle them off with the <strong>Orbit Shells</strong> button if you'd rather see the raw cloud.
                 </p>
+                <h3>The White Arcs</h3>
+                <p>
+                    Each white arc is one near-Earth asteroid passing through Earth's neighborhood this week, pulled live from <a style="color:#4ecdc4;" href="https://cneos.jpl.nasa.gov/" target="_blank" rel="noopener">NASA CNEOS</a>. The small sphere on each arc marks its closest-approach point. Arcs drawn in <strong style="color:#ff6b6b;">red</strong> are flagged as Potentially Hazardous Asteroids (PHA) — close enough and large enough that NASA tracks them with extra attention. The arcs are stylized representations of the flyby plane, not literal trajectories. Toggle them with the <strong>Asteroid Arcs</strong> button.
+                </p>
                 <h3>Navigating the Scene</h3>
                 <p>
-                    <strong>Drag</strong> to rotate. <strong>Scroll</strong> or use the <strong>+ / −</strong> buttons in the top-right to zoom. Pinch to zoom on touch devices. The view auto-rotates by default — turn it off in the HUD if you'd rather steer.
+                    <strong>Drag</strong> to rotate. <strong>Scroll</strong> or use the <strong>+ / −</strong> buttons in the top-right to zoom. Click the <strong>square icon</strong> for fullscreen mode (great for deeper analysis or presenting). Pinch to zoom on touch devices. The view auto-rotates by default — turn it off in the HUD if you'd rather steer.
                 </p>
                 <h3>How the Scene Updates</h3>
                 <p>
@@ -578,7 +610,18 @@
             <div class="zoom-controls" aria-label="Zoom controls">
                 <button class="zoom-btn" id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in (or scroll)">+</button>
                 <button class="zoom-btn" id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out (or scroll)">−</button>
+                <button class="zoom-btn" id="fullscreenBtn" type="button" aria-label="Fullscreen" title="Fullscreen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h5V3H3v7h2V5zm14 0v5h2V3h-7v2h5zM5 19v-5H3v7h7v-2H5zm14 0h-5v2h7v-7h-2v5z"/></svg>
+                </button>
                 <div class="zoom-hint">Drag to rotate</div>
+            </div>
+
+            <div class="scene-legend" aria-label="Scene legend">
+                <div class="scene-legend-row"><span class="scene-legend-dot" style="background:#4ecdc4;"></span>LEO satellites (&lt;2,000 km)</div>
+                <div class="scene-legend-row"><span class="scene-legend-dot" style="background:#ffd700;"></span>MEO / GPS (~20,200 km)</div>
+                <div class="scene-legend-row"><span class="scene-legend-dot" style="background:#ff6b6b;"></span>GEO (~35,786 km)</div>
+                <div class="scene-legend-row"><span class="scene-legend-line" style="background:#ffffff;"></span>Asteroid flyby this week</div>
+                <div class="scene-legend-row"><span class="scene-legend-line" style="background:#ff6b6b;"></span>Hazardous asteroid (PHA)</div>
             </div>
 
             <div class="scene-loading" id="sceneLoading">
@@ -984,6 +1027,23 @@
         }
         document.getElementById('zoomIn').addEventListener('click', () => smoothZoom(0.78));
         document.getElementById('zoomOut').addEventListener('click', () => smoothZoom(1.28));
+
+        // --- Fullscreen toggle
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                wrap.requestFullscreen?.().catch(err => console.warn('Fullscreen failed:', err));
+            } else {
+                document.exitFullscreen?.();
+            }
+        });
+        document.addEventListener('fullscreenchange', () => {
+            // Re-fit renderer after the wrap element resizes
+            resize();
+            // Update title to reflect state
+            const inFs = !!document.fullscreenElement;
+            fullscreenBtn.title = inFs ? 'Exit fullscreen' : 'Fullscreen';
+        });
 
         // --- HTML escape (XSS guard for narrator + names)
         function esc(s) {
