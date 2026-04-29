@@ -848,6 +848,39 @@ def api_magnetometer():
 _SI_CACHE = {}
 _SI_CACHE_TTL = 900  # 15 minutes
 _SI_NEG_TTL = 300    # 5 minutes — short cooldown for 403/empty results to avoid hammering
+_SI_HTTP_TIMEOUT = 6  # seconds — keep well below gunicorn worker timeout (30s)
+
+# Host-level circuit breaker: if a connection-level error occurs against
+# a host (DNS / TCP / TLS handshake), mark the entire host as unreachable
+# for _SI_HOST_DOWN_TTL seconds and short-circuit subsequent requests so
+# we never fan-out N sequential timeouts in one Flask request.
+_SI_HOST_DOWN = {}
+_SI_HOST_DOWN_TTL = 300  # 5 minutes
+
+
+def _si_host_from_url(url):
+    try:
+        from urllib.parse import urlparse
+        return urlparse(url).hostname or ''
+    except Exception:
+        return ''
+
+
+def _si_host_unreachable(host):
+    if not host:
+        return False
+    until = _SI_HOST_DOWN.get(host)
+    if until is None:
+        return False
+    if time.time() >= until:
+        _SI_HOST_DOWN.pop(host, None)
+        return False
+    return True
+
+
+def _si_mark_host_unreachable(host):
+    if host:
+        _SI_HOST_DOWN[host] = time.time() + _SI_HOST_DOWN_TTL
 
 NASA_API_KEY = os.environ.get('NASA_API_KEY', 'DEMO_KEY')
 
@@ -857,12 +890,23 @@ def _si_cached_get(url, key, params=None):
     now = time.time()
     if key in _SI_CACHE and now - _SI_CACHE[key]['ts'] < _SI_CACHE_TTL:
         return _SI_CACHE[key]['data']
+
+    # Circuit breaker: skip the call entirely if the host is currently
+    # marked unreachable.  Avoids stacking sequential connect timeouts
+    # past the gunicorn worker timeout.
+    host = _si_host_from_url(url)
+    if _si_host_unreachable(host):
+        if key in _SI_CACHE:
+            return _SI_CACHE[key]['data']
+        _SI_CACHE[key] = {'data': None, 'ts': now - (_SI_CACHE_TTL - _SI_NEG_TTL)}
+        return None
+
     try:
         headers = {
             'User-Agent': 'DeepSpacePortal/1.0 (research; +https://prabhusadasivam.com)',
             'Accept': 'application/json',
         }
-        r = http_requests.get(url, params=params, headers=headers, timeout=15)
+        r = http_requests.get(url, params=params, headers=headers, timeout=_SI_HTTP_TIMEOUT)
         # CelesTrak returns 403 when data hasn't changed since last download.
         # Treat this as a cache-hit rather than an error.
         if r.status_code == 403 and 'has not updated' in r.text:
@@ -878,6 +922,19 @@ def _si_cached_get(url, key, params=None):
         data = r.json()
         _SI_CACHE[key] = {'data': data, 'ts': now}
         return data
+    except (http_requests.exceptions.ConnectTimeout,
+            http_requests.exceptions.ConnectionError,
+            http_requests.exceptions.ReadTimeout) as exc:
+        # Connection-level failure — the host is unreachable from this
+        # box (firewall, IP block, DNS, TLS).  Trip the host circuit
+        # breaker so subsequent fan-out fetches against the same host
+        # short-circuit instantly.
+        print(f"[space-intelligence] {key} host {host} unreachable: {exc}")
+        _si_mark_host_unreachable(host)
+        if key in _SI_CACHE:
+            return _SI_CACHE[key]['data']
+        _SI_CACHE[key] = {'data': None, 'ts': now - (_SI_CACHE_TTL - _SI_NEG_TTL)}
+        return None
     except Exception as exc:
         print(f"[space-intelligence] fetch {key} failed: {exc}")
         # Return stale cache if available
@@ -1665,12 +1722,21 @@ def api_live_orbit_data():
     """
     try:
         satellites = _fetch_celestrak_active()
+        sat_status = 'ok' if satellites else (
+            'host_blocked' if _si_host_unreachable('celestrak.org') else 'unavailable'
+        )
         positions = _compute_live_positions(satellites or [], max_points=5000)
         stats = _process_orbital_data(satellites or [])
         neos = _fetch_neo_data_safe()[:10]
         kp_info = _fetch_kp_index() or {}
 
         narrative = _generate_scene_narrative(stats, neos, kp_info)
+        if sat_status != 'ok':
+            narrative = (
+                "Live satellite tracking is temporarily offline (upstream "
+                "catalog blocked from this server). Earth, the Sun, and "
+                "asteroid close-approaches are still live below. "
+            ) + narrative
 
         # Trim NEO payload to fields the client needs
         neos_lite = [{
@@ -1697,6 +1763,11 @@ def api_live_orbit_data():
             'refreshed': datetime.datetime.now(
                 datetime.timezone.utc).strftime('%B %d, %Y %H:%M UTC'),
             'earth_radius_km': _EARTH_R,
+            'data_status': {
+                'satellites': sat_status,
+                'neos': 'ok' if neos else 'unavailable',
+                'kp': 'ok' if kp_info else 'unavailable',
+            },
         })
     except Exception as exc:
         print(f"[live-orbit] data fetch failed: {exc}")

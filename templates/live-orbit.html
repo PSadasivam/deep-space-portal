@@ -1119,12 +1119,20 @@
             // Cards
             const s = d.stats || {};
             const od = s.orbit_distribution || {};
-            document.getElementById('cardSatCount').textContent =
-                (s.rendered_count || 0).toLocaleString() + ' / ' + (s.total_active || 0).toLocaleString();
-            document.getElementById('cardSatBreakdown').innerHTML =
-                'Rendered / total active. Breakdown: <strong>' + (od.LEO || 0).toLocaleString() + '</strong> LEO · ' +
-                '<strong>' + (od.MEO || 0).toLocaleString() + '</strong> MEO · ' +
-                '<strong>' + (od.GEO || 0).toLocaleString() + '</strong> GEO';
+            const ds = d.data_status || {};
+            const satOffline = ds.satellites && ds.satellites !== 'ok';
+            if (satOffline) {
+                document.getElementById('cardSatCount').textContent = 'Offline';
+                document.getElementById('cardSatBreakdown').innerHTML =
+                    'Satellite catalog (CelesTrak) is temporarily unreachable from this server. Earth, Sun, and asteroid data below remain live.';
+            } else {
+                document.getElementById('cardSatCount').textContent =
+                    (s.rendered_count || 0).toLocaleString() + ' / ' + (s.total_active || 0).toLocaleString();
+                document.getElementById('cardSatBreakdown').innerHTML =
+                    'Rendered / total active. Breakdown: <strong>' + (od.LEO || 0).toLocaleString() + '</strong> LEO · ' +
+                    '<strong>' + (od.MEO || 0).toLocaleString() + '</strong> MEO · ' +
+                    '<strong>' + (od.GEO || 0).toLocaleString() + '</strong> GEO';
+            }
 
             const neos = d.neos || [];
             if (neos.length) {
