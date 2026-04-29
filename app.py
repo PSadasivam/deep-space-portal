@@ -1319,18 +1319,149 @@ def _extract_operator(name):
     return 'Other'
 
 
-def _fetch_celestrak_active():
-    """Fetch active satellite catalog from CelesTrak GP API.
+# ---------------------------------------------------------------------------
+# Space-Track.org primary provider (authoritative US Space Force catalog)
+# ---------------------------------------------------------------------------
+_SPACETRACK_BASE = 'https://www.space-track.org'
+_SPACETRACK_LOGIN = _SPACETRACK_BASE + '/ajaxauth/login'
+# Active = not decayed; epoch within last 30 days keeps the SGP4 propagation
+# meaningful and the payload bounded (~25k objects).
+_SPACETRACK_QUERY = (
+    _SPACETRACK_BASE
+    + '/basicspacedata/query/class/gp'
+    + '/decay_date/null-val'
+    + '/epoch/%3Enow-30'
+    + '/orderby/norad_cat_id/format/json'
+)
+_SPACETRACK_CACHE_TTL = 7200  # 2 hours \u2014 stays well under the 300/hr API quota
+_spacetrack_session = None    # type: ignore  # requests.Session, lazily created
 
-    CelesTrak throttles GROUP=active to once per 2-hour update cycle (403
-    with 'has not updated' message).  On a cold start with no in-memory
-    cache the primary URL will fail.  As a fallback, we merge several
-    smaller group queries that are not subject to the same restriction.
+
+def _spacetrack_login():
+    """Establish (or refresh) an authenticated Space-Track session.
+
+    Returns a `requests.Session` on success, or None if credentials are
+    missing/invalid or the host is unreachable.  The session cookie is
+    reused across requests; callers should treat a 401/403 response as
+    a signal to call this again.
     """
+    global _spacetrack_session
+    user = os.environ.get('SPACETRACK_USER')
+    pwd = os.environ.get('SPACETRACK_PASS')
+    if not user or not pwd:
+        return None
+    try:
+        sess = http_requests.Session()
+        sess.headers.update({
+            'User-Agent': 'DeepSpacePortal/1.0 (research; +https://prabhusadasivam.com)',
+        })
+        r = sess.post(_SPACETRACK_LOGIN,
+                      data={'identity': user, 'password': pwd},
+                      timeout=_SI_HTTP_TIMEOUT)
+        # Space-Track returns 200 with a JSON body on success and a
+        # 200 HTML "Login" page on failure \u2014 detect both.
+        if r.status_code != 200 or 'Login' in r.text[:200]:
+            print('[spacetrack] login rejected (check SPACETRACK_USER/PASS)')
+            _spacetrack_session = None
+            return None
+        _spacetrack_session = sess
+        return sess
+    except (http_requests.exceptions.ConnectTimeout,
+            http_requests.exceptions.ConnectionError,
+            http_requests.exceptions.ReadTimeout) as exc:
+        print(f"[spacetrack] login host unreachable: {exc}")
+        _si_mark_host_unreachable('www.space-track.org')
+        _spacetrack_session = None
+        return None
+    except Exception as exc:
+        print(f"[spacetrack] login failed: {exc}")
+        _spacetrack_session = None
+        return None
+
+
+def _fetch_spacetrack_active():
+    """Fetch the active satellite catalog from Space-Track.org.
+
+    Returns a list of OMM dicts with the same keys CelesTrak provides
+    (`OBJECT_NAME`, `EPOCH`, `MEAN_MOTION`, `ECCENTRICITY`, ...), so
+    downstream propagation/aggregation code is provider-agnostic.
+
+    Returns None on any failure so the caller can fall through to the
+    CelesTrak path.  Honors the host-level circuit breaker.
+    """
+    cache_key = 'spacetrack_active'
+    now = time.time()
+    cached = _SI_CACHE.get(cache_key)
+    if cached and now - cached['ts'] < _SPACETRACK_CACHE_TTL:
+        return cached['data']
+
+    if not os.environ.get('SPACETRACK_USER') or not os.environ.get('SPACETRACK_PASS'):
+        return None  # Credentials not configured \u2014 silent skip
+    if _si_host_unreachable('www.space-track.org'):
+        return None
+
+    sess = _spacetrack_session or _spacetrack_login()
+    if sess is None:
+        return None
+
+    def _do_query(s):
+        return s.get(_SPACETRACK_QUERY, timeout=_SI_HTTP_TIMEOUT * 4)
+
+    try:
+        r = _do_query(sess)
+        # Session may have expired \u2014 try one re-login + retry.
+        if r.status_code in (401, 403):
+            sess = _spacetrack_login()
+            if sess is None:
+                return None
+            r = _do_query(sess)
+        if r.status_code != 200:
+            print(f"[spacetrack] query http={r.status_code}")
+            return cached['data'] if cached else None
+        data = r.json()
+        if not isinstance(data, list):
+            print('[spacetrack] query returned non-list payload')
+            return cached['data'] if cached else None
+        _SI_CACHE[cache_key] = {'data': data, 'ts': now}
+        print(f"[spacetrack] fetched {len(data)} active objects")
+        return data
+    except (http_requests.exceptions.ConnectTimeout,
+            http_requests.exceptions.ConnectionError,
+            http_requests.exceptions.ReadTimeout) as exc:
+        print(f"[spacetrack] query host unreachable: {exc}")
+        _si_mark_host_unreachable('www.space-track.org')
+        return cached['data'] if cached else None
+    except Exception as exc:
+        print(f"[spacetrack] query failed: {exc}")
+        return cached['data'] if cached else None
+
+
+# Track which provider supplied the most recent active-catalog fetch so
+# the API can surface it via data_status.
+_LAST_SAT_SOURCE = None  # 'spacetrack' | 'celestrak' | None
+
+
+def _fetch_celestrak_active():
+    """Fetch active satellite catalog: Space-Track first, CelesTrak fallback.
+
+    Tries Space-Track.org (authoritative, requires SPACETRACK_USER/PASS
+    env vars) before falling back to CelesTrak.  CelesTrak throttles
+    GROUP=active to once per 2-hour update cycle and is currently
+    blocked from this AWS IP at the TCP layer; the host circuit
+    breaker in `_si_cached_get` keeps that failure cheap.
+    """
+    global _LAST_SAT_SOURCE
+
+    st = _fetch_spacetrack_active()
+    if st:
+        _LAST_SAT_SOURCE = 'spacetrack'
+        return st
+
     raw = _si_cached_get(
         'https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=json',
         'celestrak_active')
     if raw and isinstance(raw, list):
+        _LAST_SAT_SOURCE = 'celestrak'
         return raw
 
     # Fallback: fetch smaller groups and merge (no dedup needed for charts)
@@ -1359,6 +1490,7 @@ def _fetch_celestrak_active():
             merged.extend(part)
     if merged:
         print(f"[orbital-density] fallback: merged {len(merged)} sats from {len(_FALLBACK_GROUPS)} groups")
+        _LAST_SAT_SOURCE = 'celestrak'
         return merged
     return None
 
@@ -1765,6 +1897,7 @@ def api_live_orbit_data():
             'earth_radius_km': _EARTH_R,
             'data_status': {
                 'satellites': sat_status,
+                'satellites_source': _LAST_SAT_SOURCE,
                 'neos': 'ok' if neos else 'unavailable',
                 'kp': 'ok' if kp_info else 'unavailable',
             },

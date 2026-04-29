@@ -306,3 +306,139 @@ class TestLiveOrbitApi:
         assert resp.status_code == 200
         # Confirms the template hasn't been moved/renamed
         assert b'Loading 3D scene' in resp.data or b'live-orbit' in resp.data.lower()
+
+
+# ---------------------------------------------------------------------------
+# Space-Track integration
+# ---------------------------------------------------------------------------
+
+class _FakeResp:
+    def __init__(self, status=200, payload=None, text=''):
+        self.status_code = status
+        self._payload = payload
+        self.text = text
+
+    def json(self):
+        if isinstance(self._payload, Exception):
+            raise self._payload
+        return self._payload
+
+
+class _FakeSession:
+    """Stand-in for requests.Session capturing posted/got URLs."""
+    def __init__(self, post_resp, get_resp):
+        self.post_resp = post_resp
+        self.get_resp = get_resp
+        self.headers = {}
+        self.posted = None
+        self.got = None
+
+    def post(self, url, data=None, timeout=None):
+        self.posted = (url, data)
+        return self.post_resp
+
+    def get(self, url, timeout=None):
+        self.got = url
+        if isinstance(self.get_resp, list):
+            return self.get_resp.pop(0)
+        return self.get_resp
+
+
+class TestSpacetrack:
+    def setup_method(self):
+        # Reset module-level session + caches between tests
+        portal_app._spacetrack_session = None
+        portal_app._SI_CACHE.pop('spacetrack_active', None)
+        portal_app._SI_HOST_DOWN.pop('www.space-track.org', None)
+        portal_app._LAST_SAT_SOURCE = None
+
+    def test_skips_silently_without_credentials(self, monkeypatch):
+        monkeypatch.delenv('SPACETRACK_USER', raising=False)
+        monkeypatch.delenv('SPACETRACK_PASS', raising=False)
+        assert portal_app._fetch_spacetrack_active() is None
+
+    def test_login_then_query_succeeds(self, monkeypatch):
+        monkeypatch.setenv('SPACETRACK_USER', 'test@example.com')
+        monkeypatch.setenv('SPACETRACK_PASS', 'pw')
+        sats = [_make_sat(OBJECT_NAME='SAT-X')]
+        sess = _FakeSession(
+            post_resp=_FakeResp(200, text='{"ok":true}'),
+            get_resp=_FakeResp(200, payload=sats),
+        )
+        monkeypatch.setattr(portal_app.http_requests, 'Session', lambda: sess)
+
+        result = portal_app._fetch_spacetrack_active()
+        assert result == sats
+        assert sess.posted[0] == portal_app._SPACETRACK_LOGIN
+        assert 'class/gp' in sess.got
+
+    def test_login_failure_returns_none(self, monkeypatch):
+        monkeypatch.setenv('SPACETRACK_USER', 'test@example.com')
+        monkeypatch.setenv('SPACETRACK_PASS', 'pw')
+        # Space-Track returns 200 but with HTML 'Login' page on bad creds
+        sess = _FakeSession(
+            post_resp=_FakeResp(200, text='<html>Login</html>'),
+            get_resp=_FakeResp(200, payload=[]),
+        )
+        monkeypatch.setattr(portal_app.http_requests, 'Session', lambda: sess)
+        assert portal_app._fetch_spacetrack_active() is None
+
+    def test_session_expiry_triggers_relogin(self, monkeypatch):
+        monkeypatch.setenv('SPACETRACK_USER', 'test@example.com')
+        monkeypatch.setenv('SPACETRACK_PASS', 'pw')
+        sats = [_make_sat(OBJECT_NAME='RETRY')]
+        sessions = []
+
+        def make_session():
+            sess = _FakeSession(
+                post_resp=_FakeResp(200, text='{"ok":true}'),
+                # First session: 401 expired; second session: success
+                get_resp=_FakeResp(401, text='') if not sessions else _FakeResp(200, payload=sats),
+            )
+            sessions.append(sess)
+            return sess
+
+        monkeypatch.setattr(portal_app.http_requests, 'Session', make_session)
+        result = portal_app._fetch_spacetrack_active()
+        assert result == sats
+        assert len(sessions) == 2  # initial + re-login
+
+    def test_connect_timeout_trips_circuit_breaker(self, monkeypatch):
+        monkeypatch.setenv('SPACETRACK_USER', 'test@example.com')
+        monkeypatch.setenv('SPACETRACK_PASS', 'pw')
+
+        class _BoomSession:
+            headers = {}
+            def post(self, *a, **kw):
+                raise portal_app.http_requests.exceptions.ConnectTimeout('boom')
+            def get(self, *a, **kw):
+                raise portal_app.http_requests.exceptions.ConnectTimeout('boom')
+
+        monkeypatch.setattr(portal_app.http_requests, 'Session', _BoomSession)
+        assert portal_app._fetch_spacetrack_active() is None
+        assert portal_app._si_host_unreachable('www.space-track.org')
+
+    def test_fetch_active_prefers_spacetrack(self, monkeypatch):
+        sats = [_make_sat(OBJECT_NAME='ST-PRIMARY')]
+        monkeypatch.setattr(portal_app, '_fetch_spacetrack_active', lambda: sats)
+        # If Space-Track succeeds we must NOT hit CelesTrak
+        called = {'celestrak': False}
+        def _should_not_call(*a, **kw):
+            called['celestrak'] = True
+            return None
+        monkeypatch.setattr(portal_app, '_si_cached_get', _should_not_call)
+        result = portal_app._fetch_celestrak_active()
+        assert result == sats
+        assert portal_app._LAST_SAT_SOURCE == 'spacetrack'
+        assert called['celestrak'] is False
+
+    def test_fetch_active_falls_back_to_celestrak(self, monkeypatch):
+        monkeypatch.setattr(portal_app, '_fetch_spacetrack_active', lambda: None)
+        celestrak_sats = [_make_sat(OBJECT_NAME='CT-FALLBACK')]
+        monkeypatch.setattr(
+            portal_app, '_si_cached_get',
+            lambda url, key, params=None: celestrak_sats if 'GROUP=active' in url else None,
+        )
+        result = portal_app._fetch_celestrak_active()
+        assert result == celestrak_sats
+        assert portal_app._LAST_SAT_SOURCE == 'celestrak'

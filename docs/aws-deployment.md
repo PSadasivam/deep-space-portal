@@ -183,6 +183,42 @@ curl http://127.0.0.1:8000
 
 > Gunicorn binds to `127.0.0.1` only — it is **not** exposed to the internet directly. Nginx handles all external traffic.
 
+### Optional: Space-Track.org credentials (recommended)
+
+The Live Orbit 3D and Orbital Density pages prefer Space-Track.org as the
+authoritative source for the active satellite catalog (US Space Force
+18th SDS), with CelesTrak as a fallback. Space-Track is the only fully
+reliable provider when running from AWS EC2 because CelesTrak now blocks
+most cloud IP ranges at the TCP layer.
+
+1. Register a free account at <https://www.space-track.org/auth/createAccount>
+   and accept the User Agreement on first login.
+2. On the EC2 box, store the credentials in a systemd drop-in (so they
+   never appear in the repo or in plaintext config files outside `/etc`):
+
+   ```bash
+   sudo systemctl edit deep_space_portal
+   ```
+
+   Add (replacing the placeholders with your actual values):
+
+   ```ini
+   [Service]
+   Environment="SPACETRACK_USER=your-email@example.com"
+   Environment="SPACETRACK_PASS=your-password-here"
+   ```
+
+   Save (Ctrl+O, Enter, Ctrl+X in nano), then:
+
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl restart deep_space_portal
+   sudo systemctl show deep_space_portal -p Environment | grep SPACETRACK_USER
+   ```
+
+3. If the env vars are absent the app silently falls back to CelesTrak —
+   Space-Track is preferred, never required.
+
 ---
 
 ## 8. Configure Nginx as a Reverse Proxy
