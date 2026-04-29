@@ -847,6 +847,7 @@ def api_magnetometer():
 # ---------------------------------------------------------------------------
 _SI_CACHE = {}
 _SI_CACHE_TTL = 900  # 15 minutes
+_SI_NEG_TTL = 300    # 5 minutes — short cooldown for 403/empty results to avoid hammering
 
 NASA_API_KEY = os.environ.get('NASA_API_KEY', 'DEMO_KEY')
 
@@ -868,7 +869,10 @@ def _si_cached_get(url, key, params=None):
             if key in _SI_CACHE:
                 _SI_CACHE[key]['ts'] = now  # extend TTL
                 return _SI_CACHE[key]['data']
-            # No cache yet — return None, page will show fallback
+            # No cache yet — store a short-TTL negative entry so we don't
+            # retry the primary on every request while CelesTrak is in its
+            # 2-hour cooldown window.
+            _SI_CACHE[key] = {'data': None, 'ts': now - (_SI_CACHE_TTL - _SI_NEG_TTL)}
             return None
         r.raise_for_status()
         data = r.json()
@@ -879,6 +883,9 @@ def _si_cached_get(url, key, params=None):
         # Return stale cache if available
         if key in _SI_CACHE:
             return _SI_CACHE[key]['data']
+        # Negative cache for transient failures (e.g. CelesTrak iridium
+        # group occasionally returns non-JSON).
+        _SI_CACHE[key] = {'data': None, 'ts': now - (_SI_CACHE_TTL - _SI_NEG_TTL)}
         return None
 
 
@@ -1272,9 +1279,12 @@ def _fetch_celestrak_active():
     # Fallback: fetch smaller groups and merge (no dedup needed for charts)
     # Use NAME=STARLINK instead of GROUP=starlink because the GROUP
     # endpoint has a per-IP 2-hour cooldown that blocks cold starts.
+    # NOTE: 'iridium' is intentionally omitted — CelesTrak has been
+    # returning non-JSON for that group, which floods logs with
+    # 'Expecting value: line 1 column 1 (char 0)' on every request.
     _FALLBACK_GROUPS = [
         'oneweb', 'stations', 'weather', 'geo',
-        'resource', 'science', 'gnss', 'iridium', 'globalstar',
+        'resource', 'science', 'gnss', 'globalstar',
         'amateur', 'military',
     ]
     merged = []
