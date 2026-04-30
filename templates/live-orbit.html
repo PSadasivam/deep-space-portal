@@ -756,12 +756,16 @@
         const sunLight = new THREE.DirectionalLight(0xffffff, 1.05);
 
         // Real Sun position + Earth orientation, both driven by current UTC.
-        // Using a simple subsolar model:
+        // Subsolar model:
         //   subsolar longitude = -15 * (UTC_hours - 12)   (deg east; sun over Greenwich at 12:00 UTC)
         //   solar declination  ~= 23.44 * sin(2 pi (DOY - 81) / 365.25)
-        // We then orient Earth's mesh so the subsolar point on its surface actually
-        // faces the sun light, which means the day/night terminator falls on the
-        // correct geographic boundary at this exact moment.
+        //
+        // Texture-to-geometry alignment:
+        //   The Earth texture (earth_atmos_2048.jpg) is a standard equirectangular
+        //   map with Greenwich at u=0.5. Three.js' default SphereGeometry UV
+        //   mapping places u=0.5 at +X on the equator. Sun direction is +X.
+        //   Therefore at lonSub=0 (12:00 UTC) Greenwich must be at +X with NO
+        //   rotation, i.e. rotation.y = lonSubRad.
         function updateSunAndEarth() {
             const now = new Date();
             const hoursUTC = now.getUTCHours()
@@ -785,8 +789,8 @@
             );
 
             // Earth orientation so its subsolar point lines up with the sun.
-            // Derived: rotation.y = lonSub - pi/2  (texture u=0.5 = Greenwich at -Z)
-            const yRot = lonSubRad - Math.PI / 2;
+            // At 12:00 UTC, lonSub = 0, rotation.y = 0, Greenwich faces the sun.
+            const yRot = lonSubRad;
             earth.rotation.y = yRot;
             clouds.rotation.y = yRot;
         }
