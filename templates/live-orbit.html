@@ -588,9 +588,13 @@
                 <p>
                     <strong>Drag</strong> to rotate. <strong>Scroll</strong> or use the <strong>+ / −</strong> buttons in the top-right to zoom. Click the <strong>square icon</strong> for fullscreen mode (great for deeper analysis or presenting). Pinch to zoom on touch devices. The view auto-rotates by default — turn it off in the HUD if you'd rather steer.
                 </p>
+                <h3>The Moon</h3>
+                <p>
+                    The grey body off in the distance is the <strong>Moon</strong>, placed at its real geocentric position right now (~384,400 km from Earth, roughly 60 Earth radii — zoom out to find it). Its position is computed live from the current UTC using a standard low-precision lunar ephemeris. The Moon is lit by the same directional sunlight that lights Earth, so the <em>phase</em> you see — new, crescent, half, gibbous, full — matches the phase the real Moon is showing tonight. At true scale the Moon would render as a tiny dot, so the body is drawn ~4× oversized for legibility (its position is unchanged); this is the same convention NASA Eyes and most planetariums use. If the Moon appears to sweep across the view, that's the <strong>camera auto-rotation</strong> — toggle <em>Auto-rotate</em> off and the Moon will sit nearly still, as it does in reality (~0.5°/hour). Toggle the body itself with the <strong>Moon</strong> button.
+                </p>
                 <h3>How the Scene Updates</h3>
                 <p>
-                    Positions are computed server-side from current orbital elements every time you load the page, then refreshed every few minutes. Earth's orientation and the day/night terminator are driven by real UTC and solar declination — the sunlit hemisphere you see <em>is</em> the sunlit Earth right now, accurate to the actual subsolar point.
+                    Positions are computed server-side from current orbital elements every time you load the page, then refreshed every few minutes. Earth's orientation and the day/night terminator are driven by real UTC and solar declination — the sunlit hemisphere you see <em>is</em> the sunlit Earth right now, accurate to the actual subsolar point. The Moon's geocentric position and lunar phase update every minute from the same UTC clock.
                 </p>
                 <h3>The Narrator</h3>
                 <p>
@@ -616,6 +620,7 @@
                 <button class="hud-btn on" id="toggleSats" type="button"><span class="swatch" style="background:#4ecdc4;"></span>Satellites</button>
                 <button class="hud-btn on" id="toggleNeos" type="button"><span class="swatch" style="background:#ffffff;"></span>Asteroid Arcs</button>
                 <button class="hud-btn on" id="toggleShells" type="button"><span class="swatch" style="background:#ffd700;"></span>Orbit Shells</button>
+                <button class="hud-btn on" id="toggleMoon" type="button"><span class="swatch" style="background:#cfcfcf;"></span>Moon</button>
                 <button class="hud-btn on" id="toggleAtmo" type="button">Atmosphere</button>
                 <button class="hud-btn on" id="toggleSpin" type="button">Auto-rotate</button>
             </div>
@@ -747,13 +752,18 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.07;
         controls.minDistance = 1.6;
-        controls.maxDistance = 30;
+        controls.maxDistance = 200;   // wide enough to see the full lunar orbit (~60 Earth radii)
         controls.enablePan = false;
         controls.autoRotate = !REDUCED_MOTION;
         controls.autoRotateSpeed = 0.35;
 
         // --- Lighting
         const sunLight = new THREE.DirectionalLight(0xffffff, 1.05);
+        // Sun direction unit vector, kept up-to-date by updateSunAndEarth().
+        // Used both as the light direction and as the reference axis for the
+        // Moon's geocentric placement (so the lunar phase visible from Earth
+        // in this scene matches the real Sun–Earth–Moon geometry).
+        const sunDirUnit = new THREE.Vector3(1, 0, 0);
 
         // Real Sun position + Earth orientation, both driven by current UTC.
         // Subsolar model:
@@ -787,12 +797,59 @@
                 Math.sin(declRad) * 50,
                 0
             );
+            sunDirUnit.copy(sunLight.position).normalize();
 
             // Earth orientation so its subsolar point lines up with the sun.
             // At 12:00 UTC, lonSub = 0, rotation.y = 0, Greenwich faces the sun.
             const yRot = lonSubRad;
             earth.rotation.y = yRot;
             clouds.rotation.y = yRot;
+
+            // ---- Moon position (real-time, geocentric) ----
+            // Low-precision lunar/solar ecliptic-longitude model (Meeus,
+            // simplified). Accurate to ~1° in elongation — more than enough
+            // for a visually-correct lunar phase and direction in the scene.
+            // d = days since J2000.0 (2000-01-01 12:00 UT).
+            const J2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
+            const d = (now.getTime() - J2000) / 86400000;
+            const DEG = Math.PI / 180;
+            const norm360 = (x) => ((x % 360) + 360) % 360;
+
+            // Sun: geocentric ecliptic longitude (deg)
+            const Ms = norm360(357.5291 + 0.98560028 * d);   // mean anomaly
+            const Ls = norm360(280.4665 + 0.98564736 * d);   // mean longitude
+            const lambdaSun = norm360(
+                Ls + 1.915 * Math.sin(Ms * DEG) + 0.020 * Math.sin(2 * Ms * DEG)
+            );
+
+            // Moon: ecliptic longitude/latitude/distance (deg, deg, km)
+            const Lm = norm360(218.316 + 13.176396 * d);     // mean longitude
+            const Mm = norm360(134.963 + 13.064993 * d);     // mean anomaly
+            const Fm = norm360( 93.272 + 13.229350 * d);     // argument of latitude
+            const lambdaMoon = norm360(Lm + 6.289 * Math.sin(Mm * DEG));
+            const betaMoon  = 5.128 * Math.sin(Fm * DEG);    // ecliptic latitude (deg)
+            const distMoonKm = 385001 - 20905 * Math.cos(Mm * DEG);
+
+            // Place the Moon in a sun-anchored frame: the +X axis of this frame
+            // is the Sun direction (sunDirUnit). Elongation = lambdaMoon - lambdaSun
+            // is the Moon's angular separation from the Sun on the ecliptic.
+            // The lunar phase visible from Earth (origin) is determined entirely
+            // by this elongation, since the directional sunLight illuminates the
+            // hemisphere of the Moon facing +sunDirUnit.
+            const elongRad = (lambdaMoon - lambdaSun) * DEG;
+            const betaRad  = betaMoon * DEG;
+            const upY = new THREE.Vector3(0, 1, 0);
+            // "east" axis perpendicular to sun direction in the ecliptic-ish plane.
+            const east = new THREE.Vector3().crossVectors(upY, sunDirUnit).normalize();
+            const moonDir = new THREE.Vector3()
+                .addScaledVector(sunDirUnit, Math.cos(elongRad) * Math.cos(betaRad))
+                .addScaledVector(east,       Math.sin(elongRad) * Math.cos(betaRad))
+                .addScaledVector(upY,        Math.sin(betaRad));
+            const moonDistScene = distMoonKm * KM_TO_SCENE;
+            moon.position.copy(moonDir).multiplyScalar(moonDistScene);
+
+            // Tidal lock: keep the Moon's near-side facing Earth (origin).
+            moon.lookAt(0, 0, 0);
         }
         // NOTE: do NOT call updateSunAndEarth() here — earth/clouds meshes
         // are constructed below. We invoke it once after they're added to
@@ -860,7 +917,33 @@
         const clouds = new THREE.Mesh(cloudGeom, cloudMat);
         scene.add(clouds);
 
-        // Now that earth + clouds exist, set their orientation from real UTC.
+        // --- Moon (real-time position + lunar phase via shared sun light)
+        // Real Moon radius = 1737.4 km vs Earth 6378.137 km → ~0.2724 scene units.
+        // At true scale the Moon would render as a tiny dot 60 Earth radii away,
+        // so we apply a visual scale factor (geometry only — the *position* stays
+        // physically accurate). This is the same convention used by NASA Eyes
+        // and most planetarium tools so the body is readable at default zoom.
+        const MOON_VISUAL_SCALE = 4.0;
+        const MOON_R = 1737.4 * KM_TO_SCENE * MOON_VISUAL_SCALE;
+        const moonGeom = new THREE.SphereGeometry(MOON_R, 96, 96);
+        const moonTex = texLoader.load('https://threejs.org/examples/textures/planets/moon_1024.jpg');
+        moonTex.anisotropy = 8;
+        const moonMat = new THREE.MeshPhongMaterial({
+            map: moonTex,
+            color: 0xffffff,
+            shininess: 1,
+            specular: new THREE.Color(0x080808),
+            // Boost emissive slightly using the same texture so craters/maria
+            // remain visible on the night side (real lunar albedo ~0.12 makes
+            // it read as nearly black at this scale otherwise).
+            emissive: new THREE.Color(0x222222),
+            emissiveMap: moonTex,
+            emissiveIntensity: 0.18,
+        });
+        const moon = new THREE.Mesh(moonGeom, moonMat);
+        scene.add(moon);
+
+        // Now that earth + clouds + moon exist, set their orientation from real UTC.
         updateSunAndEarth();
 
         // --- Atmospheric glow (custom shader, back-side rim)
@@ -1054,6 +1137,7 @@
         bindToggle('toggleSats', (on) => { if (satPoints) satPoints.visible = on; });
         bindToggle('toggleNeos', (on) => { neoGroup.visible = on; });
         bindToggle('toggleShells', (on) => { orbitGuides.visible = on; });
+        bindToggle('toggleMoon', (on) => { moon.visible = on; });
         bindToggle('toggleAtmo', (on) => { atmo.visible = on; clouds.visible = on; });
         bindToggle('toggleSpin', (on) => { controls.autoRotate = on; });
 
