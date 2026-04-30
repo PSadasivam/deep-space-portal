@@ -491,7 +491,7 @@
             <p>Mapping Congestion in Earth's Orbital Environment</p>
             <div class="status-bar">
                 <div class="status-item" id="statusRefreshed">Loading...</div>
-                <div class="status-item">Data: CelesTrak · US Space Command</div>
+                <div class="status-item">Data: Space-Track · US Space Command</div>
             </div>
         </div>
 
@@ -524,7 +524,7 @@
             <div class="how-to-read-body" id="howBody">
                 <h3>What Are We Looking At?</h3>
                 <p>
-                    This page shows every <strong>active satellite</strong> currently in orbit around Earth, categorized by altitude, operator, and orbit type. The data comes from the US Space Command satellite catalog, published through CelesTrak — the same source used by satellite operators, researchers, and space agencies worldwide.
+                    This page shows every <strong>active satellite</strong> currently in orbit around Earth, categorized by altitude, operator, and orbit type. The data comes from the US Space Command satellite catalog, served via Space-Track.org (with CelesTrak as a fallback) — the same source used by satellite operators, researchers, and space agencies worldwide.
                 </p>
                 <h3>Orbit Classes</h3>
                 <div class="orbit-legend">
@@ -621,8 +621,8 @@
         <!-- ===== CREDITS ===== -->
         <div class="credits">
             <strong>Data Sources:</strong><br>
-            • Satellite Catalog: CelesTrak (Dr. T.S. Kelso), sourced from US Space Command 18th Space Defense Squadron<br>
-            • Orbital Elements: NORAD Two-Line Element sets via CelesTrak General Perturbations (GP) API<br>
+            • Satellite Catalog: US Space Command 18th Space Defense Squadron, served via Space-Track.org (primary, authenticated) with CelesTrak (Dr. T.S. Kelso) as a fallback<br>
+            • Orbital Elements: NORAD OMM / Two-Line Element sets via the Space-Track API (with CelesTrak GP as a fallback)<br>
             • Geomagnetic Index: NOAA Space Weather Prediction Center (SWPC)<br><br>
             All data retrieved via public APIs. Timestamps reflect your local time.<br>
             <span id="creditsRefreshed"></span>
@@ -653,7 +653,7 @@
                     <a href="/api/status">API Status</a>
                     <a href="/architecture">Platform Architecture</a>
                 </div>
-                <p>&copy; 2025 Prabhu Sadasivam | Deep Space Research | Satellite catalog courtesy of US Space Command via CelesTrak</p>
+                <p>&copy; 2025 Prabhu Sadasivam | Deep Space Research | Satellite catalog courtesy of US Space Command, served via Space-Track</p>
                 <p style="font-size: 0.7em; opacity: 0.55; margin-top: 8px;">Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by any space agency. Satellite data sourced from public catalogs.</p>
             </div>
         </footer>

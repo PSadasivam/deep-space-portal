@@ -166,6 +166,19 @@
         /* Fullscreen: scene wrapper fills the entire screen */
         .scene-wrap:fullscreen { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
         .scene-wrap:-webkit-full-screen { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+        /* Pseudo-fullscreen fallback for iOS Safari, which does not
+           support Element.requestFullscreen() on arbitrary elements. */
+        .scene-wrap.pseudo-fs {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+            box-shadow: none;
+            z-index: 9999;
+            background: #000;
+        }
+        body.pseudo-fs-active { overflow: hidden; }
 
         /* Loading overlay inside scene */
         .scene-loading {
@@ -527,7 +540,7 @@
             <p>Earth, Satellites &amp; Asteroid Flybys — Right Now</p>
             <div class="status-bar">
                 <div class="status-item" id="statusRefreshed">Initializing scene…</div>
-                <div class="status-item">Data: NASA · NOAA · CelesTrak · US Space Command</div>
+                <div class="status-item">Data: NASA · NOAA · Space-Track · US Space Command</div>
             </div>
         </div>
 
@@ -535,7 +548,7 @@
         <div class="perspective">
             <h2>My Perspectives</h2>
             <p>
-                NASA, ESA, US Space Command, CelesTrak — these are the giants. They have decades of instruments, deep-space networks, and authority I will never have. What I can do is bring their data into one frame, render it the way an engineer sees a system at runtime, and pair it with one perspective they can't offer: mine. This page isn't trying to compete with any of them. It's trying to make the orbital environment <em>feel real</em> to someone who's never thought about it.
+                NASA, ESA, US Space Command, Space-Track, CelesTrak — these are the giants. They have decades of instruments, deep-space networks, and authority I will never have. What I can do is bring their data into one frame, render it the way an engineer sees a system at runtime, and pair it with one perspective they can't offer: mine. This page isn't trying to compete with any of them. It's trying to make the orbital environment <em>feel real</em> to someone who's never thought about it.
             </p>
             <p>
                 When I watch this scene rotate, I see the same thing I see on a healthy production system at 3 AM: small things moving in coordinated patterns, on top of infrastructure that just works — until it doesn't. Most of these satellites will never make news. Most of our incidents never make news either. The art is keeping it that way: through observation, discipline, and the quiet decision to act before you have to.
@@ -554,7 +567,7 @@
             <div class="how-to-read-body" id="howBody">
                 <h3>What You're Looking At</h3>
                 <p>
-                    A 3D model of Earth, viewed from space, with up to 5,000 currently-active satellites rendered at their real positions right now. The scene is computed from orbital elements published by US Space Command via CelesTrak — the same data satellite operators use every day.
+                    A 3D model of Earth, viewed from space, with up to 5,000 currently-active satellites rendered at their real positions right now. The scene is computed from orbital elements published by US Space Command, served via Space-Track.org (with CelesTrak as a fallback) — the same catalog satellite operators use every day.
                 </p>
                 <h3>What the Dots Mean</h3>
                 <div class="orbit-legend">
@@ -663,7 +676,7 @@
         <!-- ===== CREDITS ===== -->
         <div class="credits">
             <strong>Data &amp; Visualization Credits.</strong>
-            Satellite catalog &amp; orbital elements: <strong>CelesTrak</strong> (Dr. T.S. Kelso), sourced from <strong>US Space Command 18th Space Defense Squadron</strong>.
+            Satellite catalog &amp; orbital elements: <strong>US Space Command 18th Space Defense Squadron</strong>, served via <strong>Space-Track.org</strong> (primary, authenticated) with <strong>CelesTrak</strong> (Dr. T.S. Kelso) as a fallback.
             Near-Earth Objects: <strong>NASA Center for Near Earth Object Studies (CNEOS)</strong>, Jet Propulsion Laboratory.
             Space weather: <strong>NOAA Space Weather Prediction Center (SWPC)</strong> and <strong>NASA DONKI</strong>, Goddard Space Flight Center.
             Earth textures: <strong>NASA Visible Earth</strong> (CC0).
@@ -696,7 +709,7 @@
             <a href="/atlas">3I/ATLAS</a>
             <a href="/blackhole">Black Hole</a>
         </div>
-        <p>© 2026 Prabhu Sadasivam · Data: NASA, NOAA, CelesTrak, US Space Command · Visualization: Three.js</p>
+        <p>© 2026 Prabhu Sadasivam · Data: NASA, NOAA, Space-Track, US Space Command · Visualization: Three.js</p>
     </footer>
 
     <button class="scroll-top" id="scrollTopBtn" aria-label="Scroll to top">&#x2191;</button>
@@ -1062,21 +1075,77 @@
         document.getElementById('zoomOut').addEventListener('click', () => smoothZoom(1.28));
 
         // --- Fullscreen toggle
+        // iOS Safari does not implement Element.requestFullscreen() on
+        // arbitrary elements (only <video>), so we fall back to a
+        // pseudo-fullscreen CSS class that pins the wrapper to the
+        // viewport. Same UX, works everywhere.
         const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const nativeFsRequest = wrap.requestFullscreen ||
+            wrap.webkitRequestFullscreen ||
+            wrap.webkitRequestFullScreen ||
+            wrap.msRequestFullscreen;
+        const nativeFsExit = document.exitFullscreen ||
+            document.webkitExitFullscreen ||
+            document.msExitFullscreen;
+        function nativeFsElement() {
+            return document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.msFullscreenElement;
+        }
+        function inPseudoFs() {
+            return wrap.classList.contains('pseudo-fs');
+        }
+        function enterPseudoFs() {
+            wrap.classList.add('pseudo-fs');
+            document.body.classList.add('pseudo-fs-active');
+            fullscreenBtn.title = 'Exit fullscreen';
+            // Three.js renderer must re-fit to the new viewport.
+            requestAnimationFrame(resize);
+        }
+        function exitPseudoFs() {
+            wrap.classList.remove('pseudo-fs');
+            document.body.classList.remove('pseudo-fs-active');
+            fullscreenBtn.title = 'Fullscreen';
+            requestAnimationFrame(resize);
+        }
         fullscreenBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                wrap.requestFullscreen?.().catch(err => console.warn('Fullscreen failed:', err));
-            } else {
-                document.exitFullscreen?.();
+            // Already in some form of fullscreen → exit.
+            if (nativeFsElement()) {
+                nativeFsExit?.call(document);
+                return;
             }
+            if (inPseudoFs()) {
+                exitPseudoFs();
+                return;
+            }
+            // Try the native API first.
+            if (nativeFsRequest) {
+                const result = nativeFsRequest.call(wrap);
+                if (result && typeof result.catch === 'function') {
+                    result.catch(() => enterPseudoFs());
+                }
+                // Safari (older) returns undefined; if the API silently
+                // does nothing, fullscreenchange won't fire — but the
+                // user can tap again to toggle the pseudo mode.
+                return;
+            }
+            // No native API at all (iOS Safari on iPhone) → pseudo mode.
+            enterPseudoFs();
         });
-        document.addEventListener('fullscreenchange', () => {
-            // Re-fit renderer after the wrap element resizes
+        // Allow Escape to exit pseudo-fullscreen on devices that don't
+        // dispatch fullscreenchange.
+        document.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Escape' && inPseudoFs()) exitPseudoFs();
+        });
+        function onFsChange() {
+            // Re-fit renderer after the wrap element resizes.
             resize();
-            // Update title to reflect state
-            const inFs = !!document.fullscreenElement;
+            const inFs = !!nativeFsElement();
             fullscreenBtn.title = inFs ? 'Exit fullscreen' : 'Fullscreen';
-        });
+        }
+        document.addEventListener('fullscreenchange', onFsChange);
+        document.addEventListener('webkitfullscreenchange', onFsChange);
+        document.addEventListener('msfullscreenchange', onFsChange);
 
         // --- HTML escape (XSS guard for narrator + names)
         function esc(s) {
@@ -1124,7 +1193,7 @@
             if (satOffline) {
                 document.getElementById('cardSatCount').textContent = 'Offline';
                 document.getElementById('cardSatBreakdown').innerHTML =
-                    'Satellite catalog (CelesTrak) is temporarily unreachable from this server. Earth, Sun, and asteroid data below remain live.';
+                    'Satellite catalog is temporarily unreachable from this server. Earth, Sun, and asteroid data below remain live.';
             } else {
                 document.getElementById('cardSatCount').textContent =
                     (s.rendered_count || 0).toLocaleString() + ' / ' + (s.total_active || 0).toLocaleString();
