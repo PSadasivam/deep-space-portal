@@ -463,6 +463,11 @@ def facts():
     """Voyager 1 amazing facts page for presentations."""
     return render_template('facts.html')
 
+@app.route('/voyager-story')
+def voyager_story():
+    """The Voyager Story — narrative, leadership reflections, and credits."""
+    return render_template('voyager-story.html')
+
 @app.route('/density')
 def density():
     """Density extraction page."""
