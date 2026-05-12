@@ -773,19 +773,13 @@
             </div>
         </div>
 
-        <footer class="footer">
-            <div class="container">
-                <div class="footer-links">
-                    <a href="https://github.com/PSadasivam/voyager1-analysis" target="_blank" rel="noopener">GitHub Repository</a>
-                    <a href="https://orcid.org/0009-0008-0069-693X" target="_blank" rel="noopener">ORCID</a>
-                    <a href="https://voyager.jpl.nasa.gov/" target="_blank" rel="noopener">NASA Voyager Mission</a>
-                    <a href="https://spdf.gsfc.nasa.gov/" target="_blank" rel="noopener">NASA SPDF Data</a>
-                    <a href="/architecture">Platform Architecture</a>
-                </div>
-                <p>&copy; 2025&ndash;2026 Prabhu Sadasivam | Deep Space Research | Data courtesy of NASA JPL &amp; SPDF</p>
-                <p style="font-size: 0.7em; opacity: 0.55; margin-top: 8px;">Independent research and reflection by Prabhu Sadasivam. Not affiliated with or endorsed by NASA. All NASA data used under public domain.</p>
-            </div>
-        </footer>
+        {% set data_links = [
+            {'url': 'https://voyager.jpl.nasa.gov/', 'label': 'NASA Voyager Mission', 'external': True},
+            {'url': 'https://spdf.gsfc.nasa.gov/', 'label': 'NASA SPDF Data', 'external': True}
+        ] %}
+        {% set data_credit = 'Data courtesy of NASA JPL &amp; SPDF' %}
+        {% set disclaimer = 'Independent research and reflection by Prabhu Sadasivam. Not affiliated with or endorsed by NASA. All NASA data used under public domain.' %}
+        {% include '_footer.html' %}
     </div>
 
     <!-- Lightbox overlay -->

@@ -554,21 +554,14 @@
             </div>
         </div>
 
-        <footer class="footer">
-            <div class="container">
-                <div class="footer-links">
-                    <a href="https://github.com/PSadasivam/voyager1-analysis" target="_blank">GitHub Repository</a>
-                    <a href="https://orcid.org/0009-0008-0069-693X" target="_blank">ORCID</a>
-                    <a href="https://voyager.jpl.nasa.gov/" target="_blank">NASA Voyager Mission</a>
-                    <a href="https://api.nasa.gov/" target="_blank">NASA Open APIs</a>
-                    <a href="https://www.swpc.noaa.gov/" target="_blank">NOAA SWPC</a>
-                    <a href="/api/status">API Status</a>
-                    <a href="/architecture">Platform Architecture</a>
-                </div>
-                <p>&copy; 2025 Prabhu Sadasivam | Deep Space Research | Data courtesy of NASA JPL, CNEOS, DONKI &amp; NOAA SWPC</p>
-                <p style="font-size: 0.7em; opacity: 0.55; margin-top: 8px;">Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by NASA or NOAA. All data used under public domain.</p>
-            </div>
-        </footer>
+        {% set data_links = [
+            {'url': 'https://api.nasa.gov/', 'label': 'NASA Open APIs', 'external': True},
+            {'url': 'https://www.swpc.noaa.gov/', 'label': 'NOAA SWPC', 'external': True},
+            {'url': 'https://cneos.jpl.nasa.gov/', 'label': 'NASA CNEOS', 'external': True}
+        ] %}
+        {% set data_credit = 'Data courtesy of NASA JPL, CNEOS, DONKI &amp; NOAA SWPC' %}
+        {% set disclaimer = 'Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by NASA or NOAA. All data used under public domain.' %}
+        {% include '_footer.html' %}
     </div>
 
     <!-- Scroll to top -->

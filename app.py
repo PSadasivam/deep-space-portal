@@ -74,6 +74,14 @@ except ImportError:
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 
+
+@app.context_processor
+def inject_globals():
+    """Globals available to every Jinja template (e.g. current_year for the footer)."""
+    from datetime import datetime, timezone
+    return {'current_year': datetime.now(timezone.utc).year}
+
+
 limiter = Limiter(
     get_remote_address,
     app=app,

@@ -648,17 +648,10 @@
     <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
     <!-- Site footer -->
-    <footer class="site-footer">
-        <div>
-            <a href="https://github.com/PSadasivam/voyager1-analysis" target="_blank">Voyager 1 Repo</a>
-            <a href="https://github.com/PSadasivam/universe-inside-blackhole" target="_blank">Black Hole Repo</a>
-            <a href="https://orcid.org/0009-0008-0069-693X" target="_blank">ORCID</a>
-            <a href="/api/status">API Status</a>
-            <a href="/architecture">Platform Architecture</a>
-        </div>
-        <p style="margin-top: 15px; font-size: 0.9em;">&copy; 2025 Prabhu Sadasivam | Deep Space Research</p>
-        <p style="font-size: 0.7em; opacity: 0.55; margin-top: 8px;">Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by NASA. All NASA data used under public domain.</p>
-    </footer>
+    {% set footer_class = 'site-footer' %}
+    {% set wrap_container = false %}
+    {% set data_credit = 'Theoretical research note' %}
+    {% include '_footer.html' %}
 
     <script>
         window.addEventListener('scroll', function() {

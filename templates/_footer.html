@@ -1,0 +1,50 @@
+{#
+  Shared site footer.
+
+  Optional variables (set before {% include '_footer.html' %}):
+    footer_class       CSS class on the <footer> element. Default: 'footer'.
+                       Use 'site-footer' for pages styled with that class.
+    wrap_container     Wrap inner content in <div class="container">. Default: true.
+                       Set false for pages that do not define '.container'.
+    data_links         List of {url, label, external} dicts rendered as the
+                       page-specific "data sources" row.
+    data_credit        Short trailing string appended to the copyright line
+                       (e.g. "Data courtesy of NASA JPL & SPDF").
+    disclaimer         Override for the small disclaimer line.
+
+  Universal navigation links never change. Page-specific data-source links
+  and credits go in `data_links` / `data_credit`.
+#}
+{% set _footer_class = footer_class|default('footer') %}
+{% set _wrap = wrap_container if wrap_container is defined else true %}
+{% set _disclaimer = disclaimer|default('Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by NASA. All data used under public domain.') %}
+<style>
+    /* Shared footer secondary rows. Self-contained so the partial works on every page. */
+    .footer-links-secondary { margin-top: 4px; opacity: 0.85; }
+    .footer-links-secondary a { font-size: 0.9em; }
+    .footer-links-system { margin-top: 6px; margin-bottom: 16px; opacity: 0.6; }
+    .footer-links-system a { font-size: 0.78em; letter-spacing: 0.3px; }
+</style>
+<footer class="{{ _footer_class }}">
+    {% if _wrap %}<div class="container">{% endif %}
+        <div class="footer-links">
+            <a href="https://www.linkedin.com/in/prabhusadasivam/" target="_blank" rel="noopener">LinkedIn</a>
+            <a href="https://councils.forbes.com/profile/Prabhu-Sadasivam-Vice-President-Technology-LexisNexis-Risk-Solutions/efcbadf9-2afc-4f56-a110-c9846de3be19" target="_blank" rel="noopener">Forbes Council</a>
+            <a href="https://github.com/PSadasivam" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://orcid.org/0009-0008-0069-693X" target="_blank" rel="noopener">ORCID</a>
+        </div>
+        {% if data_links %}
+        <div class="footer-links footer-links-secondary">
+            {% for link in data_links %}
+            <a href="{{ link.url }}"{% if link.external %} target="_blank" rel="noopener"{% endif %}>{{ link.label }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="footer-links footer-links-system">
+            <a href="/api/status">API Status</a>
+            <a href="/architecture">Platform Architecture</a>
+        </div>
+        <p>&copy; {{ current_year }} Prabhu Sadasivam | Prabhu&rsquo;s Deep Space Labs{% if data_credit %} &middot; {{ data_credit|safe }}{% endif %}</p>
+        <p style="font-size: 0.7em; opacity: 0.55; margin-top: 8px;">{{ _disclaimer|safe }}</p>
+    {% if _wrap %}</div>{% endif %}
+</footer>

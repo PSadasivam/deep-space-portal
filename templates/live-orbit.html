@@ -822,17 +822,15 @@
     </div>
 
     <!-- ===== FOOTER ===== -->
-    <footer class="footer">
-        <div class="footer-links">
-            <a href="/">Home</a>
-            <a href="/facts">Voyager 1</a>
-            <a href="/space-intelligence">Space Intelligence</a>
-            <a href="/orbital-density">Orbital Density</a>
-            <a href="/atlas">3I/ATLAS</a>
-            <a href="/blackhole">Black Hole</a>
-        </div>
-        <p>© 2026 Prabhu Sadasivam · Data: NASA, NOAA, Space-Track, US Space Command · Visualization: Three.js</p>
-    </footer>
+    {% set wrap_container = false %}
+    {% set data_links = [
+        {'url': 'https://celestrak.org/', 'label': 'CelesTrak', 'external': True},
+        {'url': 'https://www.space-track.org/', 'label': 'Space-Track.org', 'external': True},
+        {'url': 'https://cneos.jpl.nasa.gov/', 'label': 'NASA CNEOS', 'external': True}
+    ] %}
+    {% set data_credit = 'Data: NASA, NOAA, Space-Track, US Space Command &middot; Visualization: Three.js' %}
+    {% set disclaimer = 'Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by any space agency. Satellite data sourced from public catalogs.' %}
+    {% include '_footer.html' %}
 
     <button class="scroll-top" id="scrollTopBtn" aria-label="Scroll to top">&#x2191;</button>
 

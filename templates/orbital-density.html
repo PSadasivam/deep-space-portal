@@ -643,21 +643,13 @@
             </div>
         </div>
 
-        <footer class="footer">
-            <div class="container">
-                <div class="footer-links">
-                    <a href="https://github.com/PSadasivam/voyager1-analysis" target="_blank">GitHub Repository</a>
-                    <a href="https://orcid.org/0009-0008-0069-693X" target="_blank">ORCID</a>
-                    <a href="https://voyager.jpl.nasa.gov/" target="_blank">NASA Voyager Mission</a>
-                    <a href="https://celestrak.org/" target="_blank">CelesTrak</a>
-                    <a href="https://www.space-track.org/" target="_blank">Space-Track.org</a>
-                    <a href="/api/status">API Status</a>
-                    <a href="/architecture">Platform Architecture</a>
-                </div>
-                <p>&copy; 2025 Prabhu Sadasivam | Deep Space Research | Satellite catalog courtesy of US Space Command, served via Space-Track</p>
-                <p style="font-size: 0.7em; opacity: 0.55; margin-top: 8px;">Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by any space agency. Satellite data sourced from public catalogs.</p>
-            </div>
-        </footer>
+        {% set data_links = [
+            {'url': 'https://celestrak.org/', 'label': 'CelesTrak', 'external': True},
+            {'url': 'https://www.space-track.org/', 'label': 'Space-Track.org', 'external': True}
+        ] %}
+        {% set data_credit = 'Satellite catalog courtesy of US Space Command, served via Space-Track' %}
+        {% set disclaimer = 'Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by any space agency. Satellite data sourced from public catalogs.' %}
+        {% include '_footer.html' %}
     </div>
 
     <button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>

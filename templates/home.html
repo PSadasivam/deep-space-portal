@@ -1027,22 +1027,12 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-links">
-                <a href="https://www.linkedin.com/in/prabhusadasivam/" target="_blank" rel="noopener">LinkedIn</a>
-                <a href="https://councils.forbes.com/profile/Prabhu-Sadasivam-Vice-President-Technology-LexisNexis-Risk-Solutions/efcbadf9-2afc-4f56-a110-c9846de3be19" target="_blank" rel="noopener">Forbes Council</a>
-                <a href="https://github.com/PSadasivam" target="_blank" rel="noopener">GitHub</a>
-                <a href="https://orcid.org/0009-0008-0069-693X" target="_blank" rel="noopener">ORCID</a>
-                <a href="https://voyager.jpl.nasa.gov/" target="_blank" rel="noopener">NASA Voyager Mission</a>
-                <a href="https://spdf.gsfc.nasa.gov/" target="_blank" rel="noopener">NASA SPDF Data</a>
-                <a href="/api/status">API Status</a>
-                <a href="/architecture">Platform Architecture</a>
-            </div>
-            <p>&copy; 2026 Prabhu Sadasivam | Prabhu's Deep Space Labs | Data courtesy of NASA JPL &amp; SPDF</p>
-            <p style="font-size: 0.7em; opacity: 0.55; margin-top: 8px;">Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by NASA. All NASA data used under public domain.</p>
-        </div>
-    </footer>
+    {% set data_links = [
+        {'url': 'https://voyager.jpl.nasa.gov/', 'label': 'NASA Voyager Mission', 'external': True},
+        {'url': 'https://spdf.gsfc.nasa.gov/', 'label': 'NASA SPDF Data', 'external': True}
+    ] %}
+    {% set data_credit = 'Data courtesy of NASA JPL &amp; SPDF' %}
+    {% include '_footer.html' %}
 
     <script>
         // Smooth scrolling for anchor links
