@@ -1,0 +1,47 @@
+{#
+  Shared "scroll to top" floating button.
+  Self-contained: scoped CSS (.scroll-top-shared), button, and script.
+  Uses an isolated class so pages already shipping their own .scroll-top
+  button are unaffected.
+#}
+<style>
+    @keyframes scrollTopGlowPulse {
+        0%, 100% { box-shadow: 0 4px 15px rgba(78,205,196,0.4), 0 0 20px rgba(78,205,196,0.2), inset 0 1px 0 rgba(255,255,255,0.25); }
+        50% { box-shadow: 0 4px 20px rgba(78,205,196,0.6), 0 0 35px rgba(78,205,196,0.35), inset 0 1px 0 rgba(255,255,255,0.25); }
+    }
+    .scroll-top-shared {
+        position: fixed; bottom: 30px; right: 30px;
+        width: 48px; height: 48px;
+        background: linear-gradient(135deg, #4ecdc4 0%, #3ab5ad 50%, #2a9d8f 100%);
+        color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%;
+        font-size: 1.4rem; cursor: pointer; line-height: 1;
+        box-shadow: 0 4px 15px rgba(78,205,196,0.4), 0 0 20px rgba(78,205,196,0.2), inset 0 1px 0 rgba(255,255,255,0.25);
+        display: none; z-index: 50;
+        transition: transform 0.25s, box-shadow 0.25s, opacity 0.25s;
+        animation: scrollTopGlowPulse 3s ease-in-out infinite;
+    }
+    .scroll-top-shared:hover {
+        transform: translateY(-3px) scale(1.08);
+        box-shadow: 0 8px 25px rgba(78,205,196,0.6), 0 0 40px rgba(78,205,196,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .scroll-top-shared:active { transform: translateY(0) scale(0.97); }
+    .scroll-top-shared:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) {
+        .scroll-top-shared { animation: none; transition: none; }
+    }
+</style>
+<button type="button" class="scroll-top-shared" id="scrollTopShared" aria-label="Scroll to top">&uarr;</button>
+<script>
+    (function () {
+        var btn = document.getElementById('scrollTopShared');
+        if (!btn) return;
+        function onScroll() {
+            btn.style.display = window.scrollY > 400 ? 'block' : 'none';
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        btn.addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        onScroll();
+    })();
+</script>
