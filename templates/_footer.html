@@ -19,11 +19,9 @@
 {% set _wrap = wrap_container if wrap_container is defined else true %}
 {% set _disclaimer = disclaimer|default('Independent research by Prabhu Sadasivam. Not affiliated with or endorsed by NASA. All data used under public domain.') %}
 <style>
-    /* Shared footer secondary rows. Self-contained so the partial works on every page. */
-    .footer-links-secondary { margin-top: 4px; opacity: 0.85; }
-    .footer-links-secondary a { font-size: 0.9em; }
-    .footer-links-system { margin-top: 6px; margin-bottom: 16px; opacity: 0.6; }
-    .footer-links-system a { font-size: 0.78em; letter-spacing: 0.3px; }
+    /* Shared footer secondary row. Self-contained so the partial works on every page. */
+    .footer-links-secondary { margin-top: 6px; margin-bottom: 16px; opacity: 0.75; }
+    .footer-links-secondary a { font-size: 0.88em; }
 </style>
 <footer class="{{ _footer_class }}">
     {% if _wrap %}<div class="container">{% endif %}
@@ -33,14 +31,8 @@
             <a href="https://github.com/PSadasivam" target="_blank" rel="noopener">GitHub</a>
             <a href="https://orcid.org/0009-0008-0069-693X" target="_blank" rel="noopener">ORCID</a>
         </div>
-        {% if data_links %}
         <div class="footer-links footer-links-secondary">
-            {% for link in data_links %}
-            <a href="{{ link.url }}"{% if link.external %} target="_blank" rel="noopener"{% endif %}>{{ link.label }}</a>
-            {% endfor %}
-        </div>
-        {% endif %}
-        <div class="footer-links footer-links-system">
+            {% if data_links %}{% for link in data_links %}<a href="{{ link.url }}"{% if link.external %} target="_blank" rel="noopener"{% endif %}>{{ link.label }}</a>{% endfor %}{% endif %}
             <a href="/api/status">API Status</a>
             <a href="/architecture">Platform Architecture</a>
         </div>
