@@ -64,6 +64,13 @@ from voyager1_outbound_trajectory import (
 )
 from voyager1_density_extraction import PlasmaFrequencyTracker
 from voyager1_plasma_wave_analysis import VoyagerPWSData
+from voyager1_position_model import (
+    AU_KM,
+    KM_MILES,
+    LIGHT_SECONDS_PER_AU,
+    VOYAGER1_LAUNCH,
+    voyager1_distance_au,
+)
 
 try:
     import cdflib
@@ -441,8 +448,14 @@ def create_trajectory_plot():
 
 @app.route('/')
 def index():
-    """Beautiful landing page inspired by Prabhu's blog design."""
-    return render_template('home.html')
+    """Beautiful landing page inspired by Prabhu's blog design.
+
+    Voyager 1 distance / mission-age are computed at request time from the
+    shared synthetic position model (see voyager1_position_model.py).
+    See docs/home-dynamic-voyager-ticket.md.
+    """
+    today_key = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d')
+    return render_template('home.html', facts=_voyager1_live_stats_cached(today_key))
 
 @app.route('/dashboard')
 def dashboard():
@@ -466,10 +479,58 @@ def plasma_waves():
     return jsonify({'message': 'Plasma wave analysis coming soon!', 
                    'redirect': '/dashboard'})
 
+
+def _voyager1_live_stats(today: datetime.date | None = None) -> dict:
+    """Compute Voyager 1 storytelling stats for the /facts page.
+
+    Pure arithmetic over the shared synthetic position model — no I/O, no
+    network. See ADR-001/002/003 in docs/facts-dynamic-ticket.md.
+    """
+    if today is None:
+        today = datetime.datetime.now(datetime.timezone.utc).date()
+    distance_au = voyager1_distance_au(today)
+    distance_km = distance_au * AU_KM
+    distance_miles = distance_km * KM_MILES
+    light_one_way_s = distance_au * LIGHT_SECONDS_PER_AU
+    # Calendar-correct whole-years count (avoids leap-year drift from days//365).
+    mission_age_years = today.year - VOYAGER1_LAUNCH.year - (
+        1 if (today.month, today.day) < (VOYAGER1_LAUNCH.month, VOYAGER1_LAUNCH.day) else 0
+    )
+    return {
+        'distance_au': round(distance_au, 1),
+        'distance_km_billions': round(distance_km / 1e9, 1),
+        'distance_miles_billions': round(distance_miles / 1e9, 1),
+        'light_time_one_way_hours': round(light_one_way_s / 3600.0, 1),
+        'light_time_round_trip_hours': round(2 * light_one_way_s / 3600.0, 1),
+        'mission_age_years': mission_age_years,
+        'as_of_utc': today.strftime('%B %Y'),
+    }
+
+
+from functools import lru_cache as _lru_cache  # local import; keeps top of file tidy
+
+
+@_lru_cache(maxsize=8)
+def _voyager1_live_stats_cached(date_key: str) -> dict:
+    """Memoise _voyager1_live_stats per UTC date.
+
+    The cache key is a YYYY-MM-DD string so the entry naturally rolls over
+    at UTC midnight without any eviction logic.
+    """
+    return _voyager1_live_stats()
+
+
 @app.route('/facts')
 def facts():
-    """Voyager 1 amazing facts page for presentations."""
-    return render_template('facts.html')
+    """Voyager 1 amazing facts page for presentations.
+
+    Distance/light-time/age values are computed at request time from the
+    shared synthetic position model (see voyager1_position_model.py).
+    Memoised by UTC date so all requests on the same day return the same
+    object without recomputing. See docs/facts-dynamic-ticket.md.
+    """
+    today_key = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d')
+    return render_template('facts.html', facts=_voyager1_live_stats_cached(today_key))
 
 @app.route('/voyager-story')
 def voyager_story():

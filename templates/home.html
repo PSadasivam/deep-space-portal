@@ -8,7 +8,7 @@
     <meta name="description" content="Prabhu Sadasivam — VP of Technology at LexisNexis Risk Solutions. Deep space research, Voyager 1 analysis, interstellar comet studies, black hole cosmology, and enterprise platform leadership.">
     <meta name="author" content="Prabhu Sadasivam">
     <link rel="canonical" href="https://prabhusadasivam.com/">
-    <meta property="og:title" content="Prabhu Sadasivam | VP Technology | Prabhu's Deep Space Labs">
+    <meta property="og:title" content="Prabhu Sadasivam | VP Technology | LexisNexis Risk Solutions | Prabhu's Deep Space Labs | VIOVOC">
     <meta property="og:description" content="Deep space research, Voyager 1 analysis, interstellar comet studies, black hole cosmology, and enterprise platform leadership.">
     <meta property="og:url" content="https://prabhusadasivam.com/">
     <meta property="og:type" content="website">
@@ -565,6 +565,19 @@
             border-color: #4ecdc4;
         }
 
+        /* Closing thesis line — the mission statement that bridges science and leadership.
+           Earned by the preceding paragraphs; styled to land softly, not as a corporate tagline. */
+        .pdsl-thesis {
+            margin-top: 40px;
+            padding: 18px 0 18px 24px;
+            border-left: 2px solid rgba(78,205,196,0.55);
+            font-style: italic;
+            font-size: 1.18rem;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.92);
+            letter-spacing: 0.2px;
+        }
+
         /* Leadership Philosophy Section */
         .leadership-section {
             padding: 80px 0;
@@ -806,6 +819,9 @@
                 <p>
                     In parallel, I have been developing a scientific hypothesis exploring whether our universe itself could exist within a black hole&mdash;grounded in <a href="https://science.nasa.gov/universe/black-holes/" target="_blank" rel="noopener">General Relativity</a> and foundational black hole physics. This reflects a broader pursuit: not just analyzing data, but questioning the structure of reality itself. The paper is available here: <a href="/blackhole">Universe Inside a Black Hole &mdash; Hypothesis Paper</a>.
                 </p>
+                <p class="pdsl-thesis">
+                    Leaders who can interpret signals &mdash; from spacecraft, markets, or systems &mdash; will define the next era.
+                </p>
             </div>
         </div>
     </section>
@@ -816,7 +832,7 @@
             <h2 class="leadership-title">From Deep Space to Enterprise Platforms <a href="#top" class="scroll-top-rocket" title="Back to top">&#x25B3;</a></h2>
             <div class="leadership-text">
                 <p>
-                    I was a child when Voyager&nbsp;1 launched. Today, it has traveled over <span id="voyager-distance">24</span>&nbsp;billion kilometers from Earth and continues to transmit data&mdash;decades beyond its original mission life.
+                    I was a child when Voyager&nbsp;1 launched. Today, it has traveled over {{ facts.distance_km_billions }}&nbsp;billion kilometers from Earth and continues to transmit data&mdash;decades beyond its original mission life.
                 </p>
                 <p>
                     What fascinates me is not just the distance, but the design philosophy behind it.
@@ -934,7 +950,7 @@
                     <span class="project-icon"></span>
                     <h3 class="project-title">The Voyager Story</h3>
                     <p class="project-description">
-                        A whisper from the edge — the 49-year journey of humanity's farthest machine, told as a story
+                        A whisper from the edge — the {{ facts.mission_age_years }}-year journey of humanity's farthest machine, told as a story
                         of exploration, engineering resilience, and leadership insights for builders of long-lived systems.
                     </p>
                     <a href="/voyager-story" class="project-link">Read the Story →</a>
@@ -1070,30 +1086,9 @@
             setTimeout(() => createParticle(), i * 500);
         }
 
-        // Compute live Voyager 1 distance from Earth
-        // Voyager 1: ~163 AU from Sun on 2025-01-01, receding at ~3.6 AU/year
-        (function() {
-            const AU_KM = 149597870.7;
-            const refAU = 163.0;
-            const auPerYear = 3.6;
-            const refDate = new Date('2025-01-01T00:00:00Z');
-            const years = (Date.now() - refDate.getTime()) / (365.25 * 86400000);
-            const distAU = refAU + auPerYear * years;
-
-            // Try the live API first; accept only if the value is realistic (>100 AU)
-            fetch('/api/position')
-                .then(r => r.json())
-                .then(data => {
-                    const apiAU = parseFloat(data.distance);
-                    const au = (apiAU > 100) ? apiAU : distAU;
-                    document.getElementById('voyager-distance').textContent =
-                        ((au * AU_KM) / 1e9).toFixed(1);
-                })
-                .catch(() => {
-                    document.getElementById('voyager-distance').textContent =
-                        ((distAU * AU_KM) / 1e9).toFixed(1);
-                });
-        })();
+        // Voyager 1 distance is now server-rendered from voyager1_position_model.py.
+        // The previous client-side fallback model was removed to enforce ADR-002
+        // (one position model, one number, every page). See docs/home-dynamic-voyager-ticket.md.
     </script>
     {% include '_scroll_top.html' %}
 </body>

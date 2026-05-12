@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>Voyager 1 — Amazing Facts</title>
-    <meta name="description" content="Discover fascinating facts about Voyager 1 — NASA's farthest spacecraft. Real-time distance, speed, and key milestones from its 47-year journey through interstellar space.">
+    <meta name="description" content="Fascinating facts about Voyager 1 — NASA's farthest spacecraft. Distance, signal travel time, and key milestones from its journey through interstellar space, updated daily.">
     <meta name="author" content="Prabhu Sadasivam">
     <link rel="canonical" href="https://prabhusadasivam.com/facts">
     <meta property="og:title" content="Voyager 1 — Amazing Facts | Prabhu's Deep Space Labs">
-    <meta property="og:description" content="Discover fascinating facts about Voyager 1 — NASA's farthest spacecraft. Real-time distance, speed, and key milestones from its interstellar journey.">
+    <meta property="og:description" content="Fascinating facts about Voyager 1 — NASA's farthest spacecraft. Distance, signal travel time, and key milestones, updated daily.">
     <meta property="og:url" content="https://prabhusadasivam.com/facts">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Prabhu's Deep Space Labs">
@@ -21,7 +21,7 @@
         "@context": "https://schema.org",
         "@type": "Article",
         "headline": "Voyager 1 — Amazing Facts",
-        "description": "Discover fascinating facts about Voyager 1 — NASA's farthest spacecraft. Real-time distance, speed, and key milestones from its 47-year journey through interstellar space.",
+        "description": "Fascinating facts about Voyager 1 — NASA's farthest spacecraft. Distance, signal travel time, and key milestones from its journey through interstellar space, updated daily.",
         "url": "https://prabhusadasivam.com/facts",
         "author": { "@type": "Person", "name": "Prabhu Sadasivam", "url": "https://prabhusadasivam.com/" },
         "isPartOf": { "@type": "WebSite", "name": "Prabhu's Deep Space Labs", "url": "https://prabhusadasivam.com/" }
@@ -318,8 +318,8 @@
             <h1>Voyager 1 — Amazing Facts</h1>
             <p>Humanity's most distant ambassador, now in interstellar space</p>
             <div class="status-bar">
-                <div class="status-item">Source: NASA JPL & SPDF</div>
-                <div class="status-item">Last refreshed: April 2026</div>
+                <div class="status-item">Source: NASA JPL &amp; SPDF</div>
+                <div class="status-item">As of: {{ facts.as_of_utc }}</div>
             </div>
         </div>
 
@@ -334,9 +334,9 @@
 
         <!-- Hero stat -->
         <div class="hero-stat">
-            <div class="hero-number" style="font-size:3.2em">~1 Light-Day</div>
-            <div class="hero-label">from Earth — a signal takes nearly 24 hours to reach Voyager 1</div>
-            <div class="hero-sub">~170 AU &nbsp;·&nbsp; ~25.4 billion km &nbsp;·&nbsp; ~15.8 billion miles</div>
+            <div class="hero-number" style="font-size:3.2em">~{{ facts.light_time_one_way_hours }} hours</div>
+            <div class="hero-label">one-way light travel time from Earth — almost a full day at the speed of light</div>
+            <div class="hero-sub">~{{ facts.distance_au }} AU &nbsp;·&nbsp; ~{{ facts.distance_km_billions }} billion km &nbsp;·&nbsp; ~{{ facts.distance_miles_billions }} billion miles</div>
         </div>
 
         <!-- Distance & Speed -->
@@ -348,7 +348,7 @@
                     <div class="fact-text">That's <strong>38,000 mph</strong> — fast enough to cross the entire United States coast-to-coast in about <strong>4 minutes</strong>.</div>
                 </div>
                 <div class="fact-card">
-                    <div class="fact-highlight">~22.5 hours</div>
+                    <div class="fact-highlight">~{{ facts.light_time_round_trip_hours }} hours</div>
                     <div class="fact-text">The time it takes a radio signal, traveling at the speed of light, to travel from <strong>Earth to Voyager 1</strong> and back: nearly 2 full days.</div>
                 </div>
                 <div class="fact-card">
@@ -356,7 +356,7 @@
                     <div class="fact-text">At its current speed, it would take this long to reach the <strong>nearest star</strong> (Proxima Centauri) — if it were heading that way.</div>
                 </div>
                 <div class="fact-card">
-                    <div class="fact-highlight">170 AU</div>
+                    <div class="fact-highlight">{{ facts.distance_au }} AU</div>
                     <div class="fact-text">If the Sun were a basketball, Voyager 1 would be <strong>~2.5 miles away</strong>. The nearest star? About <strong>4,300 miles</strong>.</div>
                 </div>
             </div>
@@ -367,7 +367,7 @@
             <div class="category-title"><span class="category-icon"></span> Engineering Marvels</div>
             <div class="facts-grid">
                 <div class="fact-card">
-                    <div class="fact-highlight">49 years</div>
+                    <div class="fact-highlight">{{ facts.mission_age_years }} years</div>
                     <div class="fact-text">Launched <strong>September 5, 1977</strong> — still transmitting data. Most software gets deprecated in 5 years; Voyager keeps going.</div>
                 </div>
                 <div class="fact-card">
@@ -465,7 +465,10 @@
             {'url': 'https://voyager.jpl.nasa.gov/', 'label': 'NASA Voyager Mission', 'external': True},
             {'url': 'https://spdf.gsfc.nasa.gov/', 'label': 'NASA SPDF Data', 'external': True}
         ] %}
-        {% set data_credit = 'Data courtesy of NASA JPL &amp; SPDF' %}
+        {% set data_credit = 'Data courtesy of NASA JPL &amp; SPDF.' %}
+        <p style="text-align:center; font-style:italic; font-size:0.85em; opacity:0.7; margin-top:24px; margin-bottom:-4px;">
+            Position from a calibrated linear model; reconciled annually against NASA JPL Horizons.
+        </p>
         {% include '_footer.html' %}
     </div>
     {% include '_scroll_top.html' %}
