@@ -32,7 +32,7 @@ Each was packed with cameras, spectrometers, magnetometers, and transmitters —
 
 It has now been **48 years**.
 
-> **Leadership lesson — Ship to the window, not to the wish.**
+> **Leadership Insights — Ship to the window, not to the wish.**
 > The Grand Tour was not built when the technology was ready. It was built when the *planets* were ready. The team accepted a hard, immovable deadline set by the universe itself, and bent every other constraint around it. Great missions — and great products — are shipped to the window that exists, not the one we wish we had.
 
 ---
@@ -49,7 +49,7 @@ The cover of the record carries diagrams showing **how to play it**, **where Ear
 
 It says, in the quietest possible way: **we were here, we wondered, and we wanted to be known.**
 
-> **Leadership lesson — Make room for the part that isn't on the spec sheet.**
+> **Leadership Insights — Make room for the part that isn't on the spec sheet.**
 > The Golden Record produced zero telemetry, won no awards inside the engineering review, and added mass to a tight budget. Its job was to mean something — to make the mission worth doing even if every instrument failed. Every serious endeavor needs its golden record: the part that isn't measurable, but is the reason the rest of the work matters.
 
 ---
@@ -82,12 +82,14 @@ The **fastest winds in the solar system — 2,400 km/h** — howling inside the 
 
 In twelve years, two spacecraft rewrote four planets.
 
-> **Leadership lesson — The mission you planned is the floor, not the ceiling.**
+> **Leadership Insights — The mission you planned is the floor, not the ceiling.**
 > Voyager's "primary mission" ended at Saturn. Everything after — Uranus, Neptune, the heliopause, interstellar space — was earned by people who refused to declare success and walk away. The biggest discoveries almost always live past the original scope, in the part of the roadmap nobody promised to deliver.
 
 ---
 
 ## 4. The Pale Blue Dot — looking back
+
+![Earth from 3.7 billion miles — the "Pale Blue Dot," photographed by Voyager 1 on February 14, 1990 and reprocessed by JPL in 2020. Image credit: NASA / JPL-Caltech (PIA23645).](../Images/PIA23645.jpg)
 
 In 1990, thirteen years after launch, with the cameras about to be turned off forever to save power, Carl Sagan persuaded NASA to do one last thing.
 
@@ -101,7 +103,7 @@ Every human story we carry. Every war, every empire, every love, every loss. All
 
 After that photograph, Voyager 1 turned its cameras off forever. There was nothing left to photograph. Only the darkness ahead.
 
-> **Leadership lesson — Always take the photo looking back.**
+> **Leadership Insights — Always take the photo looking back.**
 > The Pale Blue Dot wasn't on the science plan. It was a perspective shift — an act of meaning-making at the edge of the budget. Every team, every product, every career deserves at least one moment where it stops, turns around, and sees how far it has come. That picture changes how everyone behind you understands the work.
 
 ---
@@ -130,7 +132,7 @@ Even here, inside our own solar system, we are already separated by time. Sunlig
 
 Distance, beyond a certain point, *is* time. The two stop being separate things.
 
-> **Leadership lesson — Decisions arrive from the past; commands land in the future.**
+> **Leadership Insights — Decisions arrive from the past; commands land in the future.**
 > Most of the data on a leader's desk describes a system that has already moved on. Most of the commands a leader sends will land in a future that hasn't arrived yet. The Voyager team has lived with this gap for nearly fifty years and learned to operate inside it: act on the best available evidence, account for what will have changed by the time your decision lands, and never confuse the message with the messenger's current state.
 
 ---
@@ -151,14 +153,15 @@ The 2023 recovery was not just a technical save. **It was an operating-model sav
 
 A spacecraft designed in the 1970s failed in interstellar space. The people who fixed it were not the people who built it. They inherited the architecture, the documentation, the constraints, and the responsibility — and they refused to let it go silent on their watch.
 
-> **Leadership lesson — Design for people who are not yet in the room.**
-> The real lesson for technology leaders is this: systems that matter must be designed for people who are not yet in the room. The **architecture has to outlive the team**. The **documentation has to outlive the memory**. The **mission has to outlive the original builders**. The 2023 save happened because someone, half a century earlier, wrote things down carefully enough to be useful to strangers.
+This was not the first time. Decades earlier, when **Voyager 2's** primary radio receiver failed and its backup developed a faulty capacitor, engineers couldn't tune the spacecraft from Earth using the normal interface. They calculated the *exact* shifted frequencies — accounting even for the Doppler shift caused by Earth's rotation — and talked to it anyway. When the standard channel breaks, the Voyager team's answer has never been "give up." It is "find the frequency that still works."
 
-> **Leadership lesson — Resilience is a culture, not a component.**
-> The 2023 save is not a story about clever code. It is a story about a generation of engineers who treated a 1970s spacecraft as a colleague worth saving — and a previous generation who documented their work well enough to be useful **half a century later**. The "can-do" mindset is not heroics on the day of the crisis. It is the discipline, the documentation, and the respect for the work that gets quietly invested for decades before.
-
-> **Leadership lesson — If you're stuck, change the frequency.**
-> When Voyager 2's primary receiver failed and the backup had a faulty capacitor, engineers couldn't tune the spacecraft from Earth. They calculated the *exact* shifted frequencies — accounting even for the Doppler shift caused by Earth's rotation — and talked to it anyway. When the standard interface breaks, the answer is rarely "give up." It is "find the frequency that still works."
+> **Leadership Insights from the long save**
+>
+> ***Design for people who are not yet in the room.*** Systems that matter must be designed for people who are not yet in the room. The **architecture has to outlive the team**. The **documentation has to outlive the memory**. The **mission has to outlive the original builders**. The 2023 save happened because someone, half a century earlier, wrote things down carefully enough to be useful to strangers.
+>
+> ***Resilience is a culture, not a component.*** The 2023 save is not a story about clever code. It is a story about a generation of engineers who treated a 1970s spacecraft as a colleague worth saving — and a previous generation who documented their work well enough to be useful **half a century later**. The "can-do" mindset is not heroics on the day of the crisis; it is the discipline, the documentation, and the respect for the work that gets quietly invested for decades before.
+>
+> ***If you're stuck, change the frequency.*** When Voyager 2's primary receiver failed and the backup had a faulty capacitor, engineers calculated the *exact* shifted frequencies — accounting even for the Doppler shift caused by Earth's rotation — and talked to it anyway. When the standard interface breaks, the answer is rarely "give up." It is "find the frequency that still works."
 
 ---
 
@@ -181,7 +184,7 @@ As of mid-2026, **Voyager 1 has just two operating science instruments**: the **
 
 Then, one day, a signal will not arrive. We will wait the usual 23 hours. Another day. Another week. And we will know.
 
-> **Leadership lesson — Longevity requires pruning.**
+> **Leadership Insights — Longevity requires pruning.**
 > Every watt matters. Every instrument competes with every other instrument. Keeping *everything* alive is no longer leadership. Keeping the *mission* alive is. That is a profound lesson for any long-lived platform, product, or organization: **growth requires ambition; longevity requires pruning**. The discipline is knowing what must end so the core can continue.
 
 ---
@@ -248,9 +251,9 @@ Voyager is not only a story about how far a spacecraft can travel. It is a story
 
 ---
 
-## Sources, credits, and accuracy notes
+## Sources and credits
 
-This page is a synthesis of NASA mission material, Carl Sagan's writings, and several publicly available documentary transcripts. The leadership reflections are the author's own.
+This page synthesizes NASA mission material, Carl Sagan's writings, and publicly available documentary transcripts. Mission facts are stated to the best of public knowledge as of **May 2026**; later refinements (notably by **Cassini–Huygens** at Saturn and Titan) are credited to the follow-up mission. The leadership reflections are the author's own.
 
 ### Primary sources
 
@@ -259,6 +262,10 @@ This page is a synthesis of NASA mission material, Carl Sagan's writings, and se
 - **NASA / JPL Voyager status updates** — Nov 2023–Apr 2024 Flight Data System anomaly and recovery; Feb 2025 Cosmic Ray Subsystem shutdown; Apr 17, 2026 LECP shutdown; current MAG + PWS operating configuration.
 - **Carl Sagan**, *Pale Blue Dot: A Vision of the Human Future in Space* (Random House, 1994).
 - **NASA Voyager Golden Record materials (1977)** — committee chaired by Carl Sagan, with Ann Druyan, Frank Drake, Jon Lomberg, Timothy Ferris, Linda Salzman Sagan, and colleagues.
+
+### Image credits
+
+- **Pale Blue Dot (2020 reprocessed)** — *Image credit: NASA / JPL-Caltech.* Source: [JPL Photojournal PIA23645](https://photojournal.jpl.nasa.gov/catalog/PIA23645). Used in accordance with [NASA's Media Usage Guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/): NASA imagery is generally not subject to copyright in the United States, may be used for editorial and educational purposes with appropriate credit, and such use does not imply NASA endorsement.
 
 ### Additional references
 
@@ -269,8 +276,4 @@ This page is a synthesis of NASA mission material, Carl Sagan's writings, and se
 
 ### A note on the leadership commentary
 
-The "Leadership lesson" callouts and the closing field guide are interpretive reflections, not NASA positions. They are written for builders, engineers, and operators of long-lived systems, drawing on the public record of the Voyager program.
-
-### A note on accuracy
-
-Mission facts are stated to the best of public knowledge as of **May 2026**. Where Voyager observations were later refined or superseded by follow-up missions (notably **Cassini–Huygens** at Saturn and Titan), the page credits the later mission. Corrections welcome.
+The "Leadership Insights" callouts and the closing field guide are interpretive reflections, not NASA positions. They are written for builders, engineers, and operators of long-lived systems, drawing on the public record of the Voyager program.
