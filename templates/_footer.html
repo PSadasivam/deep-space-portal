@@ -10,6 +10,11 @@
                        page-specific "data sources" row.
     data_credit        Short trailing string appended to the copyright line
                        (e.g. "Data courtesy of NASA JPL & SPDF").
+    footer_note        Optional small italic line rendered at the TOP of the
+                       footer (inside the dark band). Use for page-specific
+                       honesty / calibration disclosures, e.g. on /facts:
+                       "Position from a calibrated linear model; reconciled
+                       annually against NASA JPL Horizons."
     disclaimer         Override for the small disclaimer line.
 
   Universal navigation links never change. Page-specific data-source links
@@ -25,6 +30,11 @@
 </style>
 <footer class="{{ _footer_class }}">
     {% if _wrap %}<div class="container">{% endif %}
+        {% if footer_note %}
+        <p style="text-align:center; font-style:italic; font-size:0.85em; opacity:0.7; margin:0 0 18px;">
+            {{ footer_note|safe }}
+        </p>
+        {% endif %}
         <div class="footer-links">
             <a href="https://www.linkedin.com/in/prabhusadasivam/" target="_blank" rel="noopener">LinkedIn</a>
             <a href="https://councils.forbes.com/profile/Prabhu-Sadasivam-Vice-President-Technology-LexisNexis-Risk-Solutions/efcbadf9-2afc-4f56-a110-c9846de3be19" target="_blank" rel="noopener">Forbes Council</a>

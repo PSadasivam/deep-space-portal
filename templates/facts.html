@@ -466,9 +466,7 @@
             {'url': 'https://spdf.gsfc.nasa.gov/', 'label': 'NASA SPDF Data', 'external': True}
         ] %}
         {% set data_credit = 'Data courtesy of NASA JPL &amp; SPDF.' %}
-        <p style="text-align:center; font-style:italic; font-size:0.85em; opacity:0.7; margin-top:24px; margin-bottom:-4px;">
-            Position from a calibrated linear model; reconciled annually against NASA JPL Horizons.
-        </p>
+        {% set footer_note = 'Position from a calibrated linear model; reconciled annually against NASA JPL Horizons.' %}
         {% include '_footer.html' %}
     </div>
     {% include '_scroll_top.html' %}
