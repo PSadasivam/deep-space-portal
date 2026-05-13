@@ -186,3 +186,46 @@ def test_home_voyager_story_card_dynamic_age(client):
     resp = client.get('/')
     assert f'{expected_years}-year journey'.encode() in resp.data
 
+
+# ---------------------------------------------------------------------------
+# Home — Leadership Philosophy voice integrity (issue #15)
+# Editorial pass tightened the section from 13 paragraphs + 3 bullets to 5
+# paragraphs. These tests guard the signature phrases Anthropic Claude
+# specifically singled out as the strong beats — losing any of them silently
+# would re-introduce exactly the dilution the edit was meant to remove.
+# ---------------------------------------------------------------------------
+
+def test_home_preserves_signature_phrases(client):
+    """Voice regression guard for the leadership section."""
+    resp = client.get('/')
+    body = resp.data
+    must_preserve = [
+        b'engineered for a future no one could fully predict',
+        b'the how becomes reactive',
+        b'compounding investments',
+        b'That is who I am',
+        b'scientist-leader',
+    ]
+    for phrase in must_preserve:
+        assert phrase in body, f'Signature phrase lost from home leadership section: {phrase!r}'
+
+
+def test_home_leadership_section_is_tightened(client):
+    """The editorial pass removed the old bullet list and the bridge paragraphs.
+    If they reappear, the section is drifting back toward 13 paragraphs."""
+    resp = client.get('/')
+    body = resp.data
+    must_be_absent = [
+        # Bullet list shape — folded into prose.
+        b'It is how one-platform visions are shaped.',
+        b'It is how complex portfolios are simplified.',
+        # Pure-bridge / setup sentences that were absorbed into stronger paragraphs.
+        b'What fascinates me is not just the distance, but the design philosophy behind it.',
+        b'That mindset has fundamentally shaped who I am as a technology leader.',
+        # The old typo'd setup line ("insights:" plural).
+        b'Voyager offers a simple but enduring leadership insights',
+    ]
+    for phrase in must_be_absent:
+        assert phrase not in body, f'Old diluted phrasing returned to home leadership section: {phrase!r}'
+
+
