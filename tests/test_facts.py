@@ -229,3 +229,28 @@ def test_home_leadership_section_is_tightened(client):
         assert phrase not in body, f'Old diluted phrasing returned to home leadership section: {phrase!r}'
 
 
+# ---------------------------------------------------------------------------
+# Home — Card sections removed, replaced with "Where to Next" block (issue #18)
+# ---------------------------------------------------------------------------
+
+def test_home_card_sections_removed(client):
+    """The three sitemap-style card grids are gone (Voyager / 3I-ATLAS / Black Hole)."""
+    body = client.get('/').data
+    must_be_absent = [
+        b'Voyager 1: Deep Space Analysis',
+        b'3I/ATLAS: Interstellar Comet Research',
+        b'Black Hole Cosmology: Scientific Paper',
+    ]
+    for phrase in must_be_absent:
+        assert phrase not in body, f'Card section heading returned to home: {phrase!r}'
+
+
+def test_home_where_to_next_block_present(client):
+    """The replacement narrative pointer block must be live with curated entry points."""
+    body = client.get('/').data
+    assert b'Where To Go Next' in body
+    for path in (b'/voyager-story', b'/space-intelligence', b'/atlas', b'/blackhole'):
+        assert path in body, f'Curated entry point missing from Where-to-Next block: {path!r}'
+
+
+
