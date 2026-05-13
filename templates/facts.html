@@ -69,6 +69,17 @@
             font-style: italic;
             color: #888;
         }
+        .hero-calibration {
+            text-align: right;
+            font-size: 0.8em;
+            font-style: italic;
+            color: #888;
+            opacity: 0.85;
+            margin: 4px 0 0;
+        }
+        @media (max-width: 640px) {
+            .hero-calibration { text-align: center; }
+        }
 
         /* Hero stat */
         .hero-stat {
@@ -321,6 +332,7 @@
                 <div class="status-item">Source: NASA JPL &amp; SPDF</div>
                 <div class="status-item">As of: {{ facts.as_of_utc }}</div>
             </div>
+            <p class="hero-calibration">Position from a calibrated linear model; reconciled annually against NASA JPL Horizons.</p>
         </div>
 
         <div class="v1-subnav">
@@ -466,7 +478,6 @@
             {'url': 'https://spdf.gsfc.nasa.gov/', 'label': 'NASA SPDF Data', 'external': True}
         ] %}
         {% set data_credit = 'Data courtesy of NASA JPL &amp; SPDF.' %}
-        {% set footer_note = 'Position from a calibrated linear model; reconciled annually against NASA JPL Horizons.' %}
         {% include '_footer.html' %}
     </div>
     {% include '_scroll_top.html' %}
