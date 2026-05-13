@@ -62,7 +62,7 @@ The Deep Space Research Platform comprises five interconnected projects publishe
 │                                                                          │
 │  ┌──────────────────────────────────────────────────────────────────┐   │
 │  │                  Deep Space Portal                                │   │
-│  │   Flask web app · 12 HTML templates · 7 API endpoints            │   │
+│  │   Flask web app · 15 HTML templates · 9 API endpoints            │   │
 │  │   Nginx reverse proxy · Gunicorn WSGI · AWS deployment           │   │
 │  └─────────┬────────────────────┬───────────────────────┬───────────┘   │
 │            │                    │                       │               │
@@ -224,9 +224,9 @@ Each worker handles one request at a time. Matplotlib is not thread-safe, so `pr
                     │  ┌─────────┴──────────┐ │
                     │  │  Flask Application │ │
                     │  │  (deep_space_portal)│ │
-                    │  │  12 page routes    │ │
-                    │  │  7 API endpoints   │ │
-                    │  │  2 utility routes  │ │
+                    │  │  15 page routes    │ │
+                    │  │  9 API endpoints   │ │
+                    │  │  4 utility routes  │ │
                     │  └────────────────────┘ │
                     │                         │
                     └──────────┬──────────────┘
@@ -364,19 +364,41 @@ This approach guarantees:
 
 ### 7.4 Template Architecture
 
-All 11 HTML templates share:
+All 15 page templates plus 2 shared partials (`_footer.html`, `_scroll_top.html`) share:
 - Dark mission-control theme (`#0c0c0c → #1a1a2e → #16213e`)
-- 3D glassmorphic navigation bar with split-button dropdowns
-- SEO meta tags (title, description, Open Graph, Twitter Cards)
+- 3D glassmorphic navigation bar with split-button dropdowns (Voyager 1 · Space Intelligence · Deep Research)
+- SEO meta tags (title, description, Open Graph, Twitter Cards, JSON-LD where applicable)
 - Consistent `<header>` → `<main>` → journey navigation → `<footer>` structure
 
-Pages are connected through a **sequential journey navigation**:
+Voyager 1 analytical pages are connected through a **sequential journey navigation**:
 
 ```
 Facts → Trajectory → Plasma Waves → Density → Magnetometer → 3I/ATLAS
 ```
 
-Each page includes "Previous" / "Next" links, creating a guided research narrative through the data.
+Each analytical page includes "Previous" / "Next" links, creating a guided research narrative through the data. The home page exposes every section via the hero CTA dropdowns (canonical navigation) and a curated "Where To Go Next" prose pointer rather than a sitemap-style card grid.
+
+### 7.5 Shared Scientific Models (ADR-002)
+
+A small set of scientific constants — Voyager 1's heliopause anchor (`121.0 AU` on `2012-08-25`), post-heliopause drift rate (`3.6 AU/yr`), and J2000 pointing direction (RA `17.22 h`, Dec `12.08°`) — are exposed by a single Python module, `voyager1_project/voyager1_position_model.py`. Every consumer routes through it.
+
+| Consumer | Use |
+|----------|-----|
+| `app.py:_voyager1_live_stats()` | Distance, light-time, mission-age on `/facts` and `/` (date-keyed `lru_cache`) |
+| `templates/home.html` (server-rendered) | Hero distance and "X-year journey" line |
+| `voyager1_outbound_trajectory.fetch_trajectory_synthetic()` | Synthetic trajectory points and direction vector for `/trajectory` |
+| `verify_voyager_position.py` | Annual reconciliation against JPL Horizons |
+
+**Why it matters.** *Consistency of message* is a product principle and an architectural one. Two implementations of the same constant inevitably drift; a visitor who notices the inconsistency loses trust in every number on the site. The single-module approach makes drift impossible — a re-anchor against JPL Horizons updates every public surface in one commit. The pattern (constants in one pure-arithmetic module; all consumers import) generalises to any future scientific model the platform exposes.
+
+**Validation cadence.**
+
+| Layer | Cadence | Mechanism |
+|-------|---------|-----------|
+| Bound check | Every CI run | `tests/test_facts.py` asserts `150 ≤ AU ≤ 250` for any date 2025–2035 |
+| End-point agreement | Every CI run | `tests/test_outbound_trajectory_position.py` asserts the synthetic-trajectory endpoint equals `voyager1_distance_au()` exactly when the step grid lands on `end_date`, and within rounding otherwise |
+| Annual reconciliation | Once per year (next: May 2027) | `verify_voyager_position.py` against JPL Horizons; re-anchor if &#124;Δ&#124; > 1.0 AU |
+| Public-facing transparency | Always | `/facts` page footer discloses the model and reconciliation schedule |
 
 ## 8. Data Architecture
 
@@ -386,7 +408,7 @@ The platform processes data across five analytical domains:
 
 | Domain | Data Nature | Volume Characteristic | Primary Source |
 |--------|------------|----------------------|---------------|
-| **Voyager 1 Telemetry** | Time-series instrument readings | Sparse (daily/hourly resolution from 164 AU) | NASA SPDF, PDS, JPL HORIZONS |
+| **Voyager 1 Telemetry** | Time-series instrument readings | Sparse (daily/hourly resolution from ~170 AU heliocentric) | NASA SPDF, PDS, JPL HORIZONS |
 | **3I/ATLAS Tracking** | Positional ephemerides + archival observations | Batch (periodic notebook runs) | JPL HORIZONS, MAST, MPC |
 | **Black Hole Simulation** | Physical constants + derived quantities | Static (recomputed on demand) | Planck 2018 parameters |
 | **Space Intelligence** | NEO approaches + solar activity | Streaming-like (15-min refresh) | NASA NeoWs, DONKI, NOAA SWPC |
@@ -558,7 +580,7 @@ The synthetic data generators are not test mocks — they are mathematically gro
 
 | Generator | Model | Accuracy |
 |-----------|-------|----------|
-| Trajectory | Voyager 1 velocity (17 km/s) extrapolated from last known position | < 1% distance error verified against JPL HORIZONS |
+| Trajectory / position | Heliopause-anchored linear drift (`121.0 AU @ 2012-08-25 + 3.6 AU/yr`) sourced from `voyager1_position_model.py`; J2000 pointing applied for 3-D positions | < 0.3 AU vs. JPL Horizons at year-out distances; reconciled annually (see §7.5) |
 | Magnetometer | Gaussian noise around 0.1 nT baseline (interstellar medium conditions) | Physically plausible range |
 | Plasma wave | Multi-frequency synthetic spectrogram with realistic power-law spectrum | Structurally accurate; not observation data |
 | Electron density | Derived from synthetic plasma frequency via $n_e = (\varepsilon_0 m_e / e^2)(2\pi f_{pe})^2$ | Formula-exact; input is synthetic |
@@ -667,6 +689,7 @@ These are architectural invariants that hold regardless of scale:
 - **Data provenance on every row** — `source` and `ingested_at` columns are non-negotiable
 - **Graceful degradation** — synthetic fallback remains the failure strategy
 - **Standard SQL** — no ORM, no SQLite-specific syntax, migration-ready at all times
+- **Single source of truth for shared scientific constants (ADR-002)** — Voyager 1's heliopause anchor, drift rate, and pointing direction live in exactly one Python module; every consumer imports. The pattern generalises to any future shared scientific model.
 
 ## 14. Operational Excellence
 
@@ -720,11 +743,12 @@ These are architectural invariants that hold regardless of scale:
 | Item | Severity | Effort | Impact if Unaddressed |
 |------|:--------:|:------:|----------------------|
 | No CI/CD pipeline | Medium | Medium | Manual deploys remain error-prone |
-| No automated testing for Flask routes | Medium | Medium | Regressions detected only in production |
 | No uptime monitoring | Medium | Low | Outages detected by manual observation |
 | No centralized logging | Low | Medium | Debugging requires SSH to EC2 |
 | Root AWS credentials in use | **High** | Low | Over-privileged access; security risk |
 | No database encryption at rest | Low | Low | Acceptable — no PII or classified data |
+
+**Resolved (recently):** A 72-test pytest regression suite (`deep_space_portal/tests/`) now covers route smoke tests, voice/structure integrity for the home page, the Voyager 1 position model bound check, and endpoint agreement between the synthetic trajectory and the shared position helper. Run on every commit before deploy.
 
 ### 15.3 Constraints
 
@@ -740,10 +764,17 @@ These are architectural invariants that hold regardless of scale:
 
 ### Phase 1 — Foundation (Complete)
 
-- [x] Flask web application with 11 pages and 7 API endpoints
-- [x] Real-time NASA/JPL data integration with synthetic fallback
+- [x] Flask web application — 15 page routes, 9 API endpoints, 4 utility routes
+- [x] Real-time NASA/JPL data integration with synthetic fallback on every external source
+- [x] Voyager 1 analytical suite: facts, trajectory, plasma waves, electron density, magnetometer
+- [x] Voyager Story long-form narrative page (`/voyager-story`)
+- [x] Single source of truth for Voyager 1 position (ADR-002) — `voyager1_position_model.py` consumed by `/facts`, `/`, `/trajectory`, and `verify_voyager_position.py`
+- [x] Dynamic `/facts` page with calibrated linear position model and annual JPL Horizons reconciliation
+- [x] Space Intelligence (NEOs + space weather), Orbital Density, Live Orbit 3D
 - [x] 3I/ATLAS Jupyter research pipeline
 - [x] Black hole bouncing cosmology simulation
+- [x] Mars 1993 mission page; AI-index structured knowledge page; this Architecture page
+- [x] 72-test pytest regression suite (routes, voice, position model, end-point agreement)
 - [x] Unified SQLite analytics database (15 tables)
 - [x] S3 backup with versioning and audit logging
 - [x] EC2 deployment with Nginx, Gunicorn, HTTPS, systemd
@@ -755,7 +786,7 @@ These are architectural invariants that hold regardless of scale:
 - [ ] CI/CD pipeline (GitHub Actions → EC2)
 - [ ] Uptime monitoring (Route 53 health check or UptimeRobot)
 - [ ] Replace root AWS credentials with scoped IAM user
-- [ ] Flask route integration tests
+- [ ] Quarterly drift-telemetry job: append `(date, horizons_au, model_au, Δ)` to a CSV (currently manual; see §7.5)
 
 ### Phase 3 — Data Pipeline Automation
 
