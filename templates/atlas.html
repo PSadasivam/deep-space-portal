@@ -398,6 +398,47 @@
             box-shadow: 0 8px 25px rgba(78,205,196,0.6), 0 0 40px rgba(78,205,196,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
         }
         .scroll-top:active { transform: translateY(0) scale(0.97); }
+
+        /* Post-publication update — interstellar comparison + audit + Leadership Insight */
+        .postpub-intro { margin: 0 0 24px; font-size: 1.02em; line-height: 1.7; opacity: 0.92; }
+        .postpub-intro strong { color: #ffd700; }
+
+        .compare-table-wrap { overflow-x: auto; margin: 18px 0 28px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.10); }
+        .compare-table { width: 100%; border-collapse: collapse; font-size: 0.92em; min-width: 640px; }
+        .compare-table th, .compare-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); vertical-align: top; }
+        .compare-table thead th { background: rgba(78,205,196,0.10); color: #4ecdc4; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.82em; }
+        .compare-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .compare-table td:first-child { color: #ffd700; font-weight: 600; }
+        .compare-table .na { color: rgba(255,255,255,0.45); font-style: italic; }
+
+        .dh-figure { margin: 22px 0 8px; padding: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; }
+        .dh-figure img { width: 100%; height: auto; display: block; border-radius: 6px; background: #fff; }
+        .dh-figure figcaption { margin-top: 12px; font-size: 0.88em; line-height: 1.6; color: rgba(255,255,255,0.78); }
+
+        .audit-list { list-style: none; margin: 14px 0 24px; padding: 0; }
+        .audit-list li { padding: 14px 18px; margin-bottom: 10px; border-radius: 8px; background: rgba(255,255,255,0.04); border-left: 4px solid #4ecdc4; }
+        .audit-list .verdict { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.78em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 10px; }
+        .audit-list .verdict.confirmed { background: rgba(78,205,196,0.18); color: #4ecdc4; }
+        .audit-list .verdict.wrong { background: rgba(255,107,107,0.18); color: #ff6b6b; }
+        .audit-list .verdict.unsupported { background: rgba(255,215,0,0.15); color: #ffd700; }
+        .audit-list .claim { font-weight: 600; color: #fff; }
+        .audit-list .evidence { display: block; margin-top: 6px; font-size: 0.9em; opacity: 0.85; }
+        .audit-list .source { display: block; margin-top: 4px; font-size: 0.82em; color: rgba(255,255,255,0.55); font-family: 'Consolas', monospace; }
+        .audit-list li.wrong-row { border-left-color: #ff6b6b; }
+        .audit-list li.unsupported-row { border-left-color: #ffd700; }
+
+        .lesson {
+            margin: 28px 0 12px; padding: 22px 28px;
+            background: linear-gradient(180deg, rgba(78,205,196,0.10) 0%, rgba(78,205,196,0.03) 100%);
+            border-left: 4px solid #4ecdc4;
+            border-radius: 8px;
+        }
+        .lesson .lesson-title {
+            font-weight: 700; color: #4ecdc4; font-size: 1.02em;
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px;
+        }
+        .lesson p { margin: 0; font-size: 1em; line-height: 1.65; }
+        .lesson .insight { font-size: 1.18em; font-style: italic; color: #fff; }
     </style>
 </head>
 <body>
@@ -640,6 +681,125 @@
                     data to date.
                 </p>
             </div>
+        </div>
+
+        <!-- Observations Since Publication (2025–2026) -->
+        <h2 class="section-title" id="postpub">Observations Since Publication (2025&ndash;2026)</h2>
+        <p class="postpub-intro">
+            The sections above describe what was known at the time of the original notebook analysis.
+            In the months since, 3I/ATLAS reached perihelion and was characterised across the
+            UV&ndash;to&ndash;IR by JWST, HST, VLT, Subaru, SPHEREx, and ground-based campaigns.
+            What follows is a <strong>synthesis with provenance</strong>: a side-by-side comparison
+            against the two prior interstellar objects, a placement of the new water D/H measurement
+            against Solar-System cometary families, and a <strong>sourced audit</strong> of five claims
+            that have circulated in popular coverage. Every value here is vendored from the primary
+            literature with an arXiv ID or DOI; nothing is summarised from secondary reporting.
+        </p>
+
+        <h3 style="color:#4ecdc4; margin: 22px 0 8px; font-size:1.15em;">1I / 2I / 3I &mdash; what each one taught us</h3>
+        <div class="compare-table-wrap">
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>1I/&lsquo;Oumuamua (2017)</th>
+                        <th>2I/Borisov (2019)</th>
+                        <th>3I/ATLAS (2025)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Hyperbolic excess velocity</td><td>26.33 km/s</td><td>32.2 km/s</td><td>58.0 km/s</td></tr>
+                    <tr><td>Perihelion distance</td><td>0.255 AU</td><td>2.006 AU</td><td>1.357 AU</td></tr>
+                    <tr><td>Coma detected</td><td class="na">no</td><td>yes</td><td>yes</td></tr>
+                    <tr><td>Non-gravitational acceleration</td><td>yes</td><td>yes</td><td>yes</td></tr>
+                    <tr><td>Water D/H</td><td class="na">n/a (no coma)</td><td class="na">limit only</td><td>&gt; 6.6 &times; 10<sup>&minus;3</sup></td></tr>
+                    <tr><td>Methane D/H</td><td class="na">n/a (no coma)</td><td class="na">not measured</td><td>0.0331</td></tr>
+                    <tr><td>CO<sub>2</sub> / H<sub>2</sub>O</td><td class="na">n/a</td><td class="na">see notes</td><td>elevated (CO<sub>2</sub>-dominated)</td></tr>
+                    <tr><td><sup>12</sup>C / <sup>13</sup>C in CN</td><td class="na">n/a</td><td>&asymp; 100 (solar-like)</td><td>147</td></tr>
+                    <tr><td>Nucleus size</td><td>100&ndash;1000 m (elongated)</td><td>200&ndash;500 m</td><td>&asymp; 1000 m</td></tr>
+                    <tr><td>Metal emission at distance</td><td class="na">&mdash;</td><td class="na">&mdash;</td><td>yes (Ni I, Fe I to r<sub>h</sub>&nbsp;&asymp;&nbsp;2 AU)</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="font-size:0.85em; opacity:0.7; margin-bottom: 30px;">
+            Full long-format table (38 rows, source per cell) and the wide pivot are in the notebook outputs:
+            <code>interstellar_comparison_long.csv</code> and <code>interstellar_comparison.csv</code>.
+            Primary sources include Meech&nbsp;et&nbsp;al.&nbsp;2017 (Nature), Micheli&nbsp;et&nbsp;al.&nbsp;2018 (Nature),
+            Guzik&nbsp;et&nbsp;al.&nbsp;2020 and Bodewits&nbsp;et&nbsp;al.&nbsp;2020 (Nature Astronomy), and for 3I/ATLAS:
+            Roth&nbsp;et&nbsp;al.&nbsp;2026 JWST (arXiv:2603.20460, 2603.20445), Salazar Manzano&nbsp;et&nbsp;al.&nbsp;2026
+            (arXiv:2603.07026), Opitom&nbsp;et&nbsp;al.&nbsp;2026 (arXiv:2603.07187),
+            Spada, Kr&oacute;likowska &amp; Dones&nbsp;2026 (arXiv:2603.00782),
+            Huts&eacute;mekers&nbsp;et&nbsp;al.&nbsp;2026 (arXiv:2605.07652), Ahuja &amp; Ganesh&nbsp;2025 (arXiv:2511.16247).
+        </p>
+
+        <h3 style="color:#4ecdc4; margin: 22px 0 8px; font-size:1.15em;">Water D/H &mdash; placing 3I/ATLAS against the local family tree</h3>
+        <p style="font-size:0.95em; line-height:1.7; margin-bottom: 8px;">
+            The deuterium-to-hydrogen ratio in cometary water is the closest thing we have to a
+            birth certificate for ices. Protosolar gas sits at ~2&times;10<sup>&minus;5</sup>; Earth ocean water
+            is ~1.56&times;10<sup>&minus;4</sup>; Jupiter-family and Oort-cloud comets span roughly
+            10<sup>&minus;4</sup>&ndash;5&times;10<sup>&minus;4</sup>; cold prestellar / interstellar water
+            sits above 10<sup>&minus;3</sup>. The new 3I/ATLAS lower limit lands <em>above</em> even the
+            ISM water band &mdash; consistent with an origin in a cold, lightly-processed reservoir.
+        </p>
+        <figure class="dh-figure">
+            <img src="/images/3i_dh_ratio_comparison.png" alt="D/H ratio of 3I/ATLAS plotted against Solar-System cometary families and ISM water on a log scale">
+            <figcaption>
+                Water D/H ratios on a log scale. Blue points/bars: Solar-System reference families.
+                Red triangle: 3I/ATLAS lower limit from Salazar Manzano&nbsp;et&nbsp;al.&nbsp;2026 (arXiv:2603.07026,
+                Nature Astronomy accepted). Orange marker: 2I/Borisov best constraint (Aravind&nbsp;et&nbsp;al.).
+                The chart itself does not appear in any single paper &mdash; only the placement against
+                the local family tree is the new synthesis. Reproducible from the notebook.
+            </figcaption>
+        </figure>
+
+        <h3 style="color:#4ecdc4; margin: 28px 0 8px; font-size:1.15em;">What the news got wrong &mdash; sourced audit</h3>
+        <p style="font-size:0.95em; line-height:1.7; margin-bottom: 12px;">
+            Five claims that have circulated in popular coverage, each graded against the primary
+            literature. Verdicts use plain language: <em>confirmed</em>, <em>partly confirmed</em>,
+            <em>wrong</em>, <em>unsupported</em>.
+        </p>
+        <ul class="audit-list">
+            <li>
+                <span class="verdict confirmed">Confirmed</span>
+                <span class="claim">CO<sub>2</sub>-dominated coma</span>
+                <span class="evidence">JWST&nbsp;NIRSpec, Subaru, and SPHEREx independently confirm an elevated CO<sub>2</sub>/H<sub>2</sub>O signature.</span>
+                <span class="source">Primary: arXiv:2603.20460 (Roth et al. 2026, JWST) and companion observations.</span>
+            </li>
+            <li>
+                <span class="verdict confirmed">Confirmed (with context)</span>
+                <span class="claim">Nickel emission persisting to ~2&nbsp;AU</span>
+                <span class="evidence">UVES + VLT high-resolution spectroscopy detects Ni I (and Fe I) at heliocentric distances where most comets show no metals. Real, but in line with a small but growing population of Solar-System comets with the same behaviour &mdash; not unique to 3I.</span>
+                <span class="source">Primary: arXiv:2605.07652 (Huts&eacute;mekers et al. 2026).</span>
+            </li>
+            <li class="unsupported-row">
+                <span class="verdict unsupported">Unsupported</span>
+                <span class="claim">&ldquo;Green glow without carbon chains&rdquo;</span>
+                <span class="evidence">C<sub>2</sub>, C<sub>3</sub>, and CN are all clearly detected. The premise of the headline is contradicted by the spectra.</span>
+                <span class="source">Primary: arXiv:2603.07187 (Opitom et al. 2026, submitted to Nature).</span>
+            </li>
+            <li class="wrong-row">
+                <span class="verdict wrong">Wrong</span>
+                <span class="claim">&ldquo;Minimal or absent non-gravitational acceleration&rdquo;</span>
+                <span class="evidence">Non-gravitational acceleration is not only present but characterised &mdash; consistent with normal outgassing-driven thrust, not exotic propulsion.</span>
+                <span class="source">Primary: arXiv:2603.00782 (Spada, Kr&oacute;likowska &amp; Dones 2026) and follow-ups.</span>
+            </li>
+            <li class="unsupported-row">
+                <span class="verdict unsupported">Unsupported &mdash; actively contradicted</span>
+                <span class="claim">Association with the &ldquo;WOW&rdquo; signal or any technosignature</span>
+                <span class="evidence">Three independent targeted radio searches return clean nulls. No narrowband emission, no anomalous broadband structure, no spectral artefact attributable to 3I/ATLAS.</span>
+                <span class="source">Primary: arXiv:2512.19763, arXiv:2512.18142, arXiv:2603.19023 (three independent 2025&ndash;2026 null results).</span>
+            </li>
+        </ul>
+
+        <div class="lesson">
+            <div class="lesson-title">Leadership Insight</div>
+            <p class="insight">Credibility is what you decline to publish.</p>
+            <p style="margin-top:10px; opacity:0.85; font-size:0.95em;">
+                A research portal earns trust the same way a spacecraft earns longevity: by being
+                rigorous about what it leaves out. The point of the audit above is not to dunk on
+                popular coverage &mdash; it is to make explicit the editorial rule this site is run by.
+                If a claim cannot be traced to a primary source, it does not ship here.
+            </p>
         </div>
 
         <!-- Interstellar Objects Comparison -->

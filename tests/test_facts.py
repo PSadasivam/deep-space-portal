@@ -253,4 +253,49 @@ def test_home_where_to_next_block_present(client):
         assert path in body, f'Curated entry point missing from Where-to-Next block: {path!r}'
 
 
+# ---------------------------------------------------------------------------
+# /atlas — post-publication update section + Leadership Insight voice guard
+# (3I-ATLAS-research issue #2). The audit section makes an editorial claim
+# about how the portal earns trust. Losing the signature phrase silently
+# would erase the rule it is built around.
+# ---------------------------------------------------------------------------
+
+def test_atlas_post_publication_section_present(client):
+    """The 2025-2026 post-publication synthesis must be live on /atlas."""
+    body = client.get('/atlas').data
+    must_have = [
+        b'Observations Since Publication',
+        b'1I/&lsquo;Oumuamua',
+        b'2I/Borisov',
+        b'3I/ATLAS',
+        b'What the news got wrong',
+        b'3i_dh_ratio_comparison.png',
+    ]
+    for phrase in must_have:
+        assert phrase in body, f'Post-publication section missing element on /atlas: {phrase!r}'
+
+
+def test_atlas_audit_carries_primary_sources(client):
+    """Every audit verdict must be traceable to a primary arXiv source."""
+    body = client.get('/atlas').data
+    # Verdicts present
+    for verdict in (b'Confirmed', b'Unsupported', b'Wrong'):
+        assert verdict in body, f'Audit verdict missing on /atlas: {verdict!r}'
+    # Primary-source citations present (at least one arXiv ID from each audited claim cluster)
+    for arxiv_id in (b'2603.20460', b'2605.07652', b'2603.07187', b'2603.00782', b'2512.19763'):
+        assert arxiv_id in body, f'Primary-source citation missing on /atlas: {arxiv_id!r}'
+
+
+def test_atlas_preserves_leadership_insight_phrase(client):
+    """Voice regression guard for the Leadership Insight on /atlas.
+
+    The exact phrase 'Credibility is what you decline to publish.' is the
+    editorial rule the post-publication audit is built around. If it is
+    rephrased, softened, or removed, the rule disappears with it.
+    """
+    body = client.get('/atlas').data
+    assert b'Credibility is what you decline to publish.' in body, (
+        'Signature Leadership Insight phrase lost from /atlas.'
+    )
+
 
