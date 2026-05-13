@@ -684,6 +684,17 @@ proxy_pass http://127.0.0.1:8000;</pre>
             <tr><td>Public-facing transparency</td><td>Always</td><td><code>/facts</code> page footer discloses the model and reconciliation schedule</td></tr>
         </table>
 
+        <h3>7.6 Architectural Decision Records</h3>
+        <p>ADRs are captured inline in the ticket that introduced them rather than in a dedicated <code>docs/adr/</code> directory. The current set originated from the dynamic-<code>/facts</code> work and now governs every page that displays a Voyager 1 number.</p>
+        <table>
+            <tr><th>ADR</th><th>Decision</th><th>Rationale (one line)</th></tr>
+            <tr><td><strong>001</strong></td><td>Compute distance; do not compute speed</td><td><em>Compute only values whose change exceeds display precision within the page's refresh cadence.</em> Distance changes ~0.01 AU/day (visible); speed is constant at this resolution.</td></tr>
+            <tr><td><strong>002</strong></td><td>Single source of truth for the Voyager 1 position model</td><td>Two implementations of the same constant inevitably drift. One module, one number, every page. See §7.5.</td></tr>
+            <tr><td><strong>003</strong></td><td>No live JPL Horizons / network calls on the request path of storytelling pages (<code>/</code>, <code>/facts</code>)</td><td>Horizons is a <em>validation</em> concern, not a serving concern. Real-time queries would couple every page render to an external service with no value to the visitor.</td></tr>
+            <tr><td><strong>004</strong></td><td>Server-rendered values; no client-side ticking counters</td><td>Spinning digits trivialise the achievement. A single rendered number reads as fact, not as decoration.</td></tr>
+        </table>
+        <p>ADRs 001 and 004 are editorial decisions encoded in code; 002 and 003 are structural and enforced by the test suite (§7.5). When a future decision rises to the level of <em>“we will not revisit this without a written reason”</em>, append it to this table.</p>
+
         <!-- 8. Data Architecture -->
         <h2 id="data">8. Data Architecture</h2>
 

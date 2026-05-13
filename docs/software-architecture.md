@@ -400,6 +400,19 @@ A small set of scientific constants — Voyager 1's heliopause anchor (`121.0 AU
 | Annual reconciliation | Once per year (next: May 2027) | `verify_voyager_position.py` against JPL Horizons; re-anchor if &#124;Δ&#124; > 1.0 AU |
 | Public-facing transparency | Always | `/facts` page footer discloses the model and reconciliation schedule |
 
+### 7.6 Architectural Decision Records
+
+ADRs are captured inline in the ticket that introduced them rather than in a dedicated `docs/adr/` directory. The current set originated from the dynamic-`/facts` work and now governs every page that displays a Voyager 1 number.
+
+| ADR | Decision | Rationale (one line) | Source |
+|-----|----------|---------------------|--------|
+| **001** | Compute distance; do not compute speed | *Compute only values whose change exceeds display precision within the page's refresh cadence.* Distance changes ~0.01 AU/day (visible); speed is constant at this resolution. | [`docs/facts-dynamic-ticket.md`](./facts-dynamic-ticket.md) |
+| **002** | Single source of truth for the Voyager 1 position model | Two implementations of the same constant inevitably drift. One module, one number, every page. See §7.5. | [`docs/facts-dynamic-ticket.md`](./facts-dynamic-ticket.md) |
+| **003** | No live JPL Horizons / network calls on the request path of storytelling pages (`/`, `/facts`) | Horizons is a *validation* concern, not a serving concern. Real-time queries would couple every page render to an external service with no value to the visitor. | [`docs/facts-dynamic-ticket.md`](./facts-dynamic-ticket.md) |
+| **004** | Server-rendered values; no client-side ticking counters | Spinning digits trivialise the achievement. A single rendered number reads as fact, not as decoration. | [`docs/facts-dynamic-ticket.md`](./facts-dynamic-ticket.md) |
+
+ADRs 001 and 004 are editorial decisions encoded in code; 002 and 003 are structural and enforced by the test suite (§7.5). When a future decision rises to the level of *“we will not revisit this without a written reason”*, append it to this table.
+
 ## 8. Data Architecture
 
 ### 8.1 Data Domains
