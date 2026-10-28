@@ -127,6 +127,14 @@ fi
 sudo nginx -t
 echo "  Nginx config valid."
 
+# Amazon Linux 2023 ships the renewal timer disabled, and it is named
+# certbot-renew.timer (not certbot.timer). Without this the cert expires at day 90.
+sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+printf '#!/bin/sh\nsystemctl reload nginx\n' | sudo tee /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh > /dev/null
+sudo chmod 755 /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+sudo systemctl enable --now certbot-renew.timer
+echo "  Certbot auto-renewal timer enabled."
+
 # -------------------------------------------------------------------
 # Step 6: Stop old service, start new service, reload Nginx
 # -------------------------------------------------------------------

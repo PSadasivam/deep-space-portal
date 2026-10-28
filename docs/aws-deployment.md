@@ -287,11 +287,18 @@ sudo certbot --nginx \
   --expand \
   -m <YOUR_EMAIL>
 
+# Enable auto-renewal (Amazon Linux 2023 ships this timer disabled)
+sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+printf '#!/bin/sh\nsystemctl reload nginx\n' | sudo tee /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh > /dev/null
+sudo chmod 755 /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+sudo systemctl enable --now certbot-renew.timer
+
 # Verify auto-renewal
 sudo certbot renew --dry-run
+systemctl list-timers --all | grep certbot-renew   # must show a NEXT time
 ```
 
-Certbot automatically configures Nginx to redirect HTTP to HTTPS and sets up a systemd timer for certificate renewal.
+Certbot automatically configures Nginx to redirect HTTP to HTTPS. It does **not** enable renewal on Amazon Linux 2023: the unit is `certbot-renew.timer` (not `certbot.timer`) and is disabled by default. Skipping the step above caused the July and October 2026 certificate-expiry outages.
 
 > If certbot fails for `www` on the first attempt (e.g. due to DNS propagation delay), obtain the bare domain cert first, then expand it to include `www` once DNS is fully resolved.
 
