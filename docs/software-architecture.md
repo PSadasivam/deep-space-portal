@@ -89,7 +89,7 @@ The Deep Space Research Platform comprises five interconnected projects publishe
 | **Voyager 1 Analysis** | `PSadasivam/voyager1-analysis` | Scientific analysis modules: trajectory, plasma waves, electron density, magnetometer — pure computation, no web dependencies |
 | **3I/ATLAS Research** | `PSadasivam/3I-ATLAS-research` | Jupyter pipeline for interstellar comet C/2025 N1 (ATLAS): ephemerides, MAST archive queries, orbital elements |
 | **Black Hole Simulation** | `PSadasivam/universe-inside-blackhole` | Bouncing cosmology: Schwarzschild radius of total universe mass using Planck 2018 parameters |
-| **Andromeda Research** | `andromeda-research` (local, not yet published; GPL-3.0) | Monte Carlo Milky Way-Andromeda merger forecasts: vectorized port of the Sawala et al. (2025) model, parity-tested against upstream; feeds `/andromeda` with precomputed figures |
+| **Andromeda Research** | `PSadasivam/andromeda-research` (GPL-3.0) | Monte Carlo Milky Way-Andromeda merger forecasts: vectorized port of the Sawala et al. (2025) model, parity-tested against upstream; feeds `/andromeda` with precomputed figures |
 | **Unified Analytics DB** | `PSadasivam/deep-space-db` | SQLite database consolidating all research data with S3 backup and audit logging |
 
 ## 3. System Context & Integration Landscape
@@ -836,7 +836,7 @@ These are architectural invariants that hold regardless of scale:
 | 3I/ATLAS Research | `github.com/PSadasivam/3I-ATLAS-research` | `main` |
 | Black Hole Simulation | `github.com/PSadasivam/universe-inside-blackhole` | `main` |
 | Unified Analytics DB | `github.com/PSadasivam/deep-space-db` | `main` |
-| Andromeda Research | Local only (not yet published) | `main` |
+| Andromeda Research | `github.com/PSadasivam/andromeda-research` | `main` |
 
 ### B. External API Reference
 
