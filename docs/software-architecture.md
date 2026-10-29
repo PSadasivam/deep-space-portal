@@ -89,6 +89,7 @@ The Deep Space Research Platform comprises five interconnected projects publishe
 | **Voyager 1 Analysis** | `PSadasivam/voyager1-analysis` | Scientific analysis modules: trajectory, plasma waves, electron density, magnetometer — pure computation, no web dependencies |
 | **3I/ATLAS Research** | `PSadasivam/3I-ATLAS-research` | Jupyter pipeline for interstellar comet C/2025 N1 (ATLAS): ephemerides, MAST archive queries, orbital elements |
 | **Black Hole Simulation** | `PSadasivam/universe-inside-blackhole` | Bouncing cosmology: Schwarzschild radius of total universe mass using Planck 2018 parameters |
+| **Andromeda Research** | `andromeda-research` (local, not yet published; GPL-3.0) | Monte Carlo Milky Way-Andromeda merger forecasts: vectorized port of the Sawala et al. (2025) model, parity-tested against upstream; feeds `/andromeda` with precomputed figures |
 | **Unified Analytics DB** | `PSadasivam/deep-space-db` | SQLite database consolidating all research data with S3 backup and audit logging |
 
 ## 3. System Context & Integration Landscape
@@ -224,7 +225,7 @@ Each worker handles one request at a time. Matplotlib is not thread-safe, so `pr
                     │  ┌─────────┴──────────┐ │
                     │  │  Flask Application │ │
                     │  │  (deep_space_portal)│ │
-                    │  │  15 page routes    │ │
+                    │  │  16 page routes    │ │
                     │  │  9 API endpoints   │ │
                     │  │  4 utility routes  │ │
                     │  └────────────────────┘ │
@@ -556,7 +557,8 @@ The five projects are loosely coupled through four integration mechanisms:
 |-----------|---------|---------|
 | **File-system sharing** | Sibling directories under `C:\Deep-Space-Research\` | `init_db.py` reads `../3I-Atlas-Research/ephemerides.csv` |
 | **Python path import** | Portal adds `../voyager1_project` to `sys.path` | `from voyager1_magneticfield_nTS_analysis import fetch_ephemeris` |
-| **Presentation integration** | Portal Flask renders templates for all projects | `/atlas`, `/blackhole`, `/mars` pages in portal app |
+| **Presentation integration** | Portal Flask renders templates for all projects | `/atlas`, `/blackhole`, `/andromeda`, `/mars` pages in portal app |
+| **Precomputed artifacts** | Research repo writes figures into the portal's `Images/`; no simulation code runs in the web app | `andromeda-research/scripts/plot_tracks.py` -> `Images/andromeda_futures.png` |
 | **Analytical integration** | `research_insights` table links findings across domains | "Voyager 1 measures the interstellar medium that 3I/ATLAS traveled through" |
 
 ### 10.2 Integration Design Rationale
@@ -658,7 +660,7 @@ Layer 6: Cloud
 | SSH private key | `~/voyager1-deploy.pem` (local) | No |
 | S3 bucket name | `S3_BACKUP_BUCKET` env var | No |
 
-**No secrets exist in any committed file** across all four repositories.
+**No secrets exist in any committed file** across all repositories.
 
 ### 12.3 STRIDE Threat Model
 
@@ -761,7 +763,7 @@ These are architectural invariants that hold regardless of scale:
 | Root AWS credentials in use | **High** | Low | Over-privileged access; security risk |
 | No database encryption at rest | Low | Low | Acceptable — no PII or classified data |
 
-**Resolved (recently):** A 72-test pytest regression suite (`deep_space_portal/tests/`) now covers route smoke tests, voice/structure integrity for the home page, the Voyager 1 position model bound check, and endpoint agreement between the synthetic trajectory and the shared position helper. Run on every commit before deploy.
+**Resolved (recently):** A 94-test pytest regression suite (`deep_space_portal/tests/`) now covers route smoke tests, voice/structure integrity for the home page, the Voyager 1 position model bound check, endpoint agreement between the synthetic trajectory and the shared position helper, and the Andromeda page. Run on every commit before deploy.
 
 ### 15.3 Constraints
 
@@ -777,7 +779,7 @@ These are architectural invariants that hold regardless of scale:
 
 ### Phase 1 — Foundation (Complete)
 
-- [x] Flask web application — 15 page routes, 9 API endpoints, 4 utility routes
+- [x] Flask web application — 16 page routes, 9 API endpoints, 4 utility routes
 - [x] Real-time NASA/JPL data integration with synthetic fallback on every external source
 - [x] Voyager 1 analytical suite: facts, trajectory, plasma waves, electron density, magnetometer
 - [x] Voyager Story long-form narrative page (`/voyager-story`)
@@ -786,8 +788,9 @@ These are architectural invariants that hold regardless of scale:
 - [x] Space Intelligence (NEOs + space weather), Orbital Density, Live Orbit 3D
 - [x] 3I/ATLAS Jupyter research pipeline
 - [x] Black hole bouncing cosmology simulation
+- [x] Andromeda Deep Research page (`/andromeda`): reproduced Sawala (2025) and Wu (2026) merger forecasts from the `andromeda-research` repository
 - [x] Mars 1993 mission page; AI-index structured knowledge page; this Architecture page
-- [x] 72-test pytest regression suite (routes, voice, position model, end-point agreement)
+- [x] 94-test pytest regression suite (routes, voice, position model, end-point agreement, Andromeda page)
 - [x] Unified SQLite analytics database (15 tables)
 - [x] S3 backup with versioning and audit logging
 - [x] EC2 deployment with Nginx, Gunicorn, HTTPS, systemd
@@ -833,6 +836,7 @@ These are architectural invariants that hold regardless of scale:
 | 3I/ATLAS Research | `github.com/PSadasivam/3I-ATLAS-research` | `main` |
 | Black Hole Simulation | `github.com/PSadasivam/universe-inside-blackhole` | `main` |
 | Unified Analytics DB | `github.com/PSadasivam/deep-space-db` | `main` |
+| Andromeda Research | Local only (not yet published) | `main` |
 
 ### B. External API Reference
 

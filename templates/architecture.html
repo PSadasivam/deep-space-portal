@@ -297,6 +297,7 @@
                     <div class="nav-dropdown">
                         <a href="/atlas">3I/ATLAS</a>
                         <a href="/blackhole">Black Hole</a>
+                        <a href="/andromeda">Andromeda</a>
                         <a href="/mars">Mars (1993)</a>
                     </div>
                 </div>
@@ -402,6 +403,7 @@
             <tr><td><strong>Voyager 1 Analysis</strong></td><td><a href="https://github.com/PSadasivam/voyager1-analysis" target="_blank">PSadasivam/voyager1-analysis</a></td><td>Scientific analysis modules: trajectory, plasma waves, electron density, magnetometer — pure computation, no web dependencies</td></tr>
             <tr><td><strong>3I/ATLAS Research</strong></td><td><a href="https://github.com/PSadasivam/3I-ATLAS-research" target="_blank">PSadasivam/3I-ATLAS-research</a></td><td>Jupyter pipeline for interstellar comet C/2025 N1 (ATLAS): ephemerides, MAST archive queries, orbital elements</td></tr>
             <tr><td><strong>Black Hole Simulation</strong></td><td><a href="https://github.com/PSadasivam/universe-inside-blackhole" target="_blank">PSadasivam/universe-inside-blackhole</a></td><td>Bouncing cosmology: Schwarzschild radius of total universe mass using Planck 2018 parameters</td></tr>
+            <tr><td><strong>Andromeda Research</strong></td><td><code>andromeda-research</code> (local, not yet published; GPL-3.0)</td><td>Monte Carlo Milky Way&ndash;Andromeda merger forecasts: vectorized port of the Sawala et al. (2025) model, parity-tested against upstream; feeds <code>/andromeda</code> with precomputed figures</td></tr>
             <tr><td><strong>Unified Analytics DB</strong></td><td><a href="https://github.com/PSadasivam/deep-space-db" target="_blank">PSadasivam/deep-space-db</a></td><td>SQLite database consolidating all research data with S3 backup and audit logging</td></tr>
         </table>
 
@@ -524,7 +526,7 @@
                     │  ┌─────────┴──────────┐  │
                     │  │  Flask Application │  │
                     │  │  (deep_space_portal)│  │
-                    │  │  15 page routes    │  │
+                    │  │  16 page routes    │  │
                     │  │  9 API endpoints   │  │
                     │  │  4 utility routes  │  │
                     │  └────────────────────┘  │
@@ -816,7 +818,8 @@ JPL HORIZONS → astroquery → /api/trajectory → JSON
             <tr><th>Mechanism</th><th>Pattern</th><th>Example</th></tr>
             <tr><td><strong>File-system sharing</strong></td><td>Sibling directories</td><td><code>init_db.py</code> reads <code>../3I-Atlas-Research/ephemerides.csv</code></td></tr>
             <tr><td><strong>Python path import</strong></td><td>Portal adds <code>../voyager1_project</code> to <code>sys.path</code></td><td><code>from voyager1_magneticfield_nTS_analysis import fetch_ephemeris</code></td></tr>
-            <tr><td><strong>Presentation integration</strong></td><td>Portal Flask renders templates for all projects</td><td><code>/atlas</code>, <code>/blackhole</code>, <code>/mars</code> pages in portal app</td></tr>
+            <tr><td><strong>Presentation integration</strong></td><td>Portal Flask renders templates for all projects</td><td><code>/atlas</code>, <code>/blackhole</code>, <code>/andromeda</code>, <code>/mars</code> pages in portal app</td></tr>
+            <tr><td><strong>Precomputed artifacts</strong></td><td>Research repo writes figures into the portal&rsquo;s <code>Images/</code>; no simulation code runs in the web app</td><td><code>andromeda-research/scripts/plot_tracks.py</code> &rarr; <code>Images/andromeda_futures.png</code></td></tr>
             <tr><td><strong>Analytical integration</strong></td><td><code>research_insights</code> table links findings across domains</td><td>"Voyager 1 measures the interstellar medium that 3I/ATLAS traveled through"</td></tr>
         </table>
 
@@ -913,7 +916,7 @@ Layer 6: Cloud
             <tr><td>SSH private key</td><td><code>~/voyager1-deploy.pem</code> (local)</td><td>No</td></tr>
             <tr><td>S3 bucket name</td><td><code>S3_BACKUP_BUCKET</code> env var</td><td>No</td></tr>
         </table>
-        <p><strong>No secrets exist in any committed file</strong> across all four repositories.</p>
+        <p><strong>No secrets exist in any committed file</strong> across all repositories.</p>
 
         <h3>12.3 STRIDE Threat Model</h3>
         <p>A complete STRIDE analysis is documented separately, covering 14 identified threats across Spoofing, Tampering, Repudiation, Information Disclosure, DoS, and Elevation of Privilege — with trust boundary diagrams, asset inventory with CIA ratings, attack surface assessment, and incident response playbooks.</p>
@@ -1010,7 +1013,7 @@ Layer 6: Cloud
             <tr><td>Root AWS credentials in use</td><td><strong>High</strong></td><td>Low</td><td>Over-privileged access; security risk</td></tr>
             <tr><td>No database encryption at rest</td><td>Low</td><td>Low</td><td>Acceptable — no PII or classified data</td></tr>
         </table>
-        <p><strong>Resolved (recently):</strong> A 72-test pytest regression suite (<code>deep_space_portal/tests/</code>) now covers route smoke tests, voice/structure integrity for the home page, the Voyager 1 position model bound check, and endpoint agreement between the synthetic trajectory and the shared position helper. Run on every commit before deploy.</p>
+        <p><strong>Resolved (recently):</strong> A 94-test pytest regression suite (<code>deep_space_portal/tests/</code>) now covers route smoke tests, voice/structure integrity for the home page, the Voyager 1 position model bound check, endpoint agreement between the synthetic trajectory and the shared position helper, and the Andromeda page. Run on every commit before deploy.</p>
 
         <h3>15.3 Constraints</h3>
         <table>
@@ -1027,7 +1030,7 @@ Layer 6: Cloud
 
         <h3>Phase 1 — Foundation (Complete)</h3>
         <ul class="checklist">
-            <li>Flask web application — 15 page routes, 9 API endpoints, 4 utility routes</li>
+            <li>Flask web application — 16 page routes, 9 API endpoints, 4 utility routes</li>
             <li>Real-time NASA/JPL data integration with synthetic fallback on every external source</li>
             <li>Voyager 1 analytical suite: facts, trajectory, plasma waves, electron density, magnetometer</li>
             <li>Voyager Story long-form narrative page (<code>/voyager-story</code>)</li>
@@ -1036,8 +1039,9 @@ Layer 6: Cloud
             <li>Space Intelligence (NEOs + space weather), Orbital Density, Live Orbit 3D</li>
             <li>3I/ATLAS Jupyter research pipeline</li>
             <li>Black hole bouncing cosmology simulation</li>
+            <li>Andromeda Deep Research page (<code>/andromeda</code>): reproduced Sawala (2025) and Wu (2026) merger forecasts from the <code>andromeda-research</code> repository</li>
             <li>Mars 1993 mission page; AI-index structured knowledge page; this Architecture page</li>
-            <li>72-test pytest regression suite (routes, voice, position model, end-point agreement)</li>
+            <li>94-test pytest regression suite (routes, voice, position model, end-point agreement, Andromeda page)</li>
             <li>Unified SQLite analytics database (15 tables)</li>
             <li>S3 backup with versioning and audit logging</li>
             <li>EC2 deployment with Nginx, Gunicorn, HTTPS, systemd</li>
@@ -1087,6 +1091,7 @@ Layer 6: Cloud
             <tr><td>Voyager 1 Analysis</td><td><a href="https://github.com/PSadasivam/voyager1-analysis" target="_blank">github.com/PSadasivam/voyager1-analysis</a></td><td><code>main</code></td></tr>
             <tr><td>3I/ATLAS Research</td><td><a href="https://github.com/PSadasivam/3I-ATLAS-research" target="_blank">github.com/PSadasivam/3I-ATLAS-research</a></td><td><code>main</code></td></tr>
             <tr><td>Black Hole Simulation</td><td><a href="https://github.com/PSadasivam/universe-inside-blackhole" target="_blank">github.com/PSadasivam/universe-inside-blackhole</a></td><td><code>main</code></td></tr>
+            <tr><td>Andromeda Research</td><td>Local only (not yet published)</td><td><code>main</code></td></tr>
             <tr><td>Unified Analytics DB</td><td><a href="https://github.com/PSadasivam/deep-space-db" target="_blank">github.com/PSadasivam/deep-space-db</a></td><td><code>main</code></td></tr>
         </table>
 

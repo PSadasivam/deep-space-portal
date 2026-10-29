@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>Andromeda: How Certain Is Our Galactic Future? — Prabhu's Deep Space Labs</title>
+    <meta name="description" content="Will the Milky Way merge with Andromeda? A reproducible look at why two 2025-2026 forecasts disagree (52% vs 90%), and a dated forecast to be published before Gaia Data Release 4.">
+    <meta name="author" content="Prabhu Sadasivam">
+    <link rel="canonical" href="https://prabhusadasivam.com/andromeda">
+    <meta property="og:title" content="Andromeda: How Certain Is Our Galactic Future? | Prabhu's Deep Space Labs">
+    <meta property="og:description" content="Same model, one updated measurement, opposite headlines: reproducing the Milky Way-Andromeda merger forecasts ahead of Gaia DR4.">
+    <meta property="og:url" content="https://prabhusadasivam.com/andromeda">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Prabhu's Deep Space Labs">
+    <meta property="og:image" content="https://prabhusadasivam.com/images/andromeda_futures.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Andromeda: How Certain Is Our Galactic Future?">
+    <meta name="twitter:description" content="Reproducing the Milky Way-Andromeda merger forecasts: 52% with 2025 inputs, 90% with 2026 inputs.">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Andromeda: How Certain Is Our Galactic Future?",
+        "description": "A reproducible look at why the 2025 and 2026 Milky Way-Andromeda merger forecasts disagree, and a dated forecast to be published before Gaia Data Release 4.",
+        "url": "https://prabhusadasivam.com/andromeda",
+        "image": "https://prabhusadasivam.com/images/andromeda_futures.png",
+        "dateModified": "2026-10-29",
+        "author": { "@type": "Person", "name": "Prabhu Sadasivam", "url": "https://prabhusadasivam.com/" },
+        "isPartOf": { "@type": "WebSite", "name": "Prabhu's Deep Space Labs", "url": "https://prabhusadasivam.com/" }
+    }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            min-height: 100vh;
+        }
+
+        .site-header {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 100%);
+            padding: 20px;
+            text-align: center;
+            overflow: visible;
+            position: relative; z-index: 10;
+        }
+
+        .dr-subnav { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; padding: 20px 0 8px; }
+        .dr-subnav a {
+            display: inline-block; padding: 10px 22px; min-width: 140px; text-align: center;
+            color: #555; text-decoration: none; font-size: 0.92rem; font-weight: 600; border-radius: 10px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(240,240,240,0.9) 100%);
+            border: 1px solid rgba(0,0,0,0.12);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.9) inset;
+            transform: perspective(600px) rotateX(2deg); transition: all 0.25s ease;
+        }
+        .dr-subnav a:hover {
+            color: #1a1a2e; transform: perspective(600px) rotateX(0deg) translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 0 18px rgba(102,126,234,0.25), 0 1px 0 rgba(255,255,255,0.9) inset;
+            border-color: rgba(102,126,234,0.4);
+        }
+        .dr-subnav a.active {
+            color: #1a1a2e; font-weight: 700; border-color: rgba(102,126,234,0.5);
+            background: linear-gradient(180deg, rgba(102,126,234,0.12) 0%, rgba(102,126,234,0.04) 100%);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12), 0 0 14px rgba(102,126,234,0.2), 0 1px 0 rgba(255,255,255,0.9) inset;
+        }
+
+        .paper { max-width: 860px; margin: 0 auto; background: #fff; box-shadow: 0 2px 20px rgba(0,0,0,0.08); padding: 60px 64px; }
+        @media (max-width: 900px) { .paper { padding: 36px 24px; } }
+
+        .paper-title { font-size: 1.85rem; font-weight: 700; line-height: 1.3; margin-bottom: 8px; color: #111; text-align: center; }
+        .paper .paper-subtitle { font-size: 1.1rem; font-weight: 300; font-style: italic; color: #555; text-align: center; margin-bottom: 24px; }
+        .author-block { text-align: center; margin-bottom: 28px; font-size: 0.95rem; color: #444; line-height: 1.7; }
+        .author-block a { color: #2563eb; text-decoration: none; }
+        .author-block a:hover { text-decoration: underline; }
+
+        .status-box {
+            display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: center;
+            background: #0f1530; color: #e6e9f5; border-radius: 10px; padding: 16px 22px; margin-bottom: 32px;
+            font-size: 0.9rem; line-height: 1.5;
+        }
+        .status-box strong { color: #ffd700; }
+
+        .hero-figures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 8px 0 32px; }
+        .hero-figure { border: 1px solid #e5e5e5; border-radius: 10px; padding: 18px 14px; text-align: center; }
+        .hero-figure .value { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+        .hero-figure .label { font-size: 0.85rem; color: #555; margin-top: 8px; line-height: 1.45; }
+        .value-2025 { color: #c0392b; }
+        .value-2026 { color: #2563eb; }
+        .value-lmc { color: #2a9d8f; }
+        @media (max-width: 700px) { .hero-figures { grid-template-columns: 1fr; } }
+
+        .intro-box { background: #f7f7f7; border-left: 4px solid #2563eb; padding: 24px 28px; margin-bottom: 36px; border-radius: 0 8px 8px 0; }
+        .intro-label { font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #2563eb; margin-bottom: 10px; }
+        .intro-box p { font-size: 0.95rem; line-height: 1.75; color: #333; margin-bottom: 12px; }
+        .intro-box p:last-child { margin-bottom: 0; }
+
+        h2 { font-size: 1.3rem; font-weight: 700; margin: 40px 0 16px; color: #111; border-bottom: 1px solid #e5e5e5; padding-bottom: 6px; }
+        h2 .beat { color: #888; font-weight: 600; font-size: 0.85em; margin-right: 6px; }
+        h3 { font-size: 1.05rem; font-weight: 600; margin: 28px 0 12px; color: #222; }
+
+        .paper p { font-size: 1rem; line-height: 1.85; margin-bottom: 14px; color: #222; }
+        .paper ul, .paper ol { padding-left: 24px; margin-bottom: 16px; }
+        .paper li { font-size: 1rem; line-height: 1.8; color: #222; margin-bottom: 6px; }
+        .paper a { color: #2563eb; }
+
+        .equation { text-align: center; font-family: 'Cambria Math', 'Times New Roman', serif; font-size: 1.15rem; margin: 18px 0; color: #111; }
+
+        .figure-block { text-align: center; margin: 28px 0; }
+        .figure-block img { max-width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        .figure-caption { font-size: 0.88rem; color: #555; margin-top: 10px; line-height: 1.6; font-style: italic; }
+        .figure-provenance { font-size: 0.82rem; color: #666; margin-top: 6px; line-height: 1.55; }
+        .zoomable { display: inline-block; position: relative; cursor: zoom-in; }
+        .zoom-hint {
+            position: absolute; right: 10px; bottom: 10px; background: rgba(15,21,48,0.85); color: #fff;
+            font-size: 0.78rem; padding: 4px 10px; border-radius: 12px; pointer-events: none;
+        }
+        .lightbox {
+            display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(5,8,20,0.92);
+            align-items: center; justify-content: center; padding: 24px; cursor: zoom-out;
+        }
+        .lightbox.open { display: flex; }
+        .lightbox img { max-width: 100%; max-height: 100%; background: #fff; border-radius: 6px; box-shadow: 0 12px 48px rgba(0,0,0,0.6); }
+        .lightbox-close {
+            position: absolute; top: 16px; right: 20px; background: none; border: 1px solid rgba(255,255,255,0.4);
+            color: #fff; font-size: 1.5rem; width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
+        }
+
+        .explainer { border: 1px solid #dbe3f5; border-radius: 10px; background: #f8faff; margin: 18px 0 24px; }
+        .explainer summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: #1e3a8a; list-style-position: inside; }
+        .explainer summary:hover { color: #2563eb; }
+        .explainer-body { padding: 4px 22px 18px; }
+        .explainer-body p, .explainer-body li { font-size: 0.96rem; line-height: 1.75; }
+        .worked { background: #fff; border: 1px dashed #b8c4e0; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-family: 'Cambria Math', 'Times New Roman', serif; }
+
+        .table-wrap { overflow-x: auto; margin: 18px 0 24px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+        th, td { padding: 9px 12px; border-bottom: 1px solid #e5e5e5; text-align: left; vertical-align: top; }
+        th { background: #f4f6fb; font-weight: 600; color: #222; }
+        td.num { white-space: nowrap; }
+
+        .clock-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0 24px; }
+        .clock { border-top: 4px solid #2563eb; background: #fafbfc; border-radius: 0 0 8px 8px; padding: 16px; }
+        .clock h3 { margin: 0 0 8px; font-size: 1rem; }
+        .clock p { font-size: 0.92rem; line-height: 1.6; margin: 0; }
+        .clock.earth { border-color: #2a9d8f; }
+        .clock.sun { border-color: #e6a700; }
+        .clock.galaxy { border-color: #6b46c1; }
+        @media (max-width: 700px) { .clock-grid { grid-template-columns: 1fr; } }
+
+        .leadership {
+            background: #fffaf0; border-left: 4px solid #e6a700; padding: 22px 26px; margin: 40px 0; border-radius: 0 8px 8px 0;
+        }
+        .leadership .intro-label { color: #b7791f; }
+        .leadership p { font-size: 1rem; line-height: 1.8; margin-bottom: 10px; }
+        .leadership p:last-child { margin-bottom: 0; }
+
+        .note { font-size: 0.9rem; color: #555; }
+        .sources li { font-size: 0.92rem; line-height: 1.65; }
+
+        .paper-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5e5; font-size: 0.82rem; color: #888; text-align: center; line-height: 1.6; }
+
+        .site-footer { background: #2c3e50; color: white; text-align: center; padding: 30px 0; margin-top: 0; }
+        .site-footer a { color: #ecf0f1; text-decoration: none; margin: 0 15px; transition: color 0.3s; }
+        .site-footer a:hover { color: #3498db; }
+
+        /* Grouped nav */
+        .main-nav { display:flex; justify-content:center; align-items:center; margin-bottom:24px; position:relative; flex-wrap:wrap; }
+        .nav-toggle { display:none; background:none; border:1px solid rgba(255,255,255,0.25); color:#ccc; font-size:1.5em; padding:6px 14px; border-radius:10px; cursor:pointer; transition:all 0.25s; }
+        .nav-toggle:hover { color:#fff; border-color:#4ecdc4; }
+        .nav-links { display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap; }
+        .nav-links > a { display:inline-flex; align-items:center; justify-content:center; padding:15px 36px; color:#fff; text-decoration:none; font-size:1.15rem; font-weight:600; border-radius:12px; border:1px solid rgba(255,255,255,0.15); background:linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%); box-shadow:0 6px 20px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.10) inset; transform:perspective(600px) rotateX(2deg); transition:all 0.25s ease; }
+        .nav-links > a:hover { transform:perspective(600px) rotateX(0deg) translateY(-3px); box-shadow:0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(78,205,196,0.35), 0 1px 0 rgba(255,255,255,0.12) inset; border-color:rgba(78,205,196,0.45); }
+        .nav-group { position:relative; display:inline-flex; align-items:stretch; }
+        .nav-group-label { display:inline-flex; align-items:center; justify-content:center; padding:15px 36px; color:#fff; font-family:inherit; font-size:1.15rem; font-weight:600; border-radius:12px 0 0 12px; border:1px solid rgba(255,255,255,0.15); border-right:none; background:linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%); box-shadow:0 6px 20px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.10) inset; transform:perspective(600px) rotateX(2deg); transition:all 0.25s ease; cursor:pointer; text-decoration:none; white-space:nowrap; }
+        .nav-group-label.active { color:#ffd700; border-color:rgba(255,215,0,0.5); background:linear-gradient(180deg, rgba(255,215,0,0.15) 0%, rgba(255,215,0,0.04) 100%); box-shadow:0 6px 20px rgba(0,0,0,0.45), 0 0 14px rgba(255,215,0,0.25), 0 1px 0 rgba(255,255,255,0.10) inset; }
+        .nav-caret { display:inline-flex; align-items:center; justify-content:center; width:44px; color:#fff; font-size:0.65em; cursor:pointer; border-radius:0 12px 12px 0; border:1px solid rgba(255,255,255,0.15); border-left:1px solid rgba(255,255,255,0.08); background:linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%); box-shadow:0 6px 20px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.10) inset; transform:perspective(600px) rotateX(2deg); transition:all 0.25s ease; }
+        .nav-group:hover .nav-group-label, .nav-group:hover .nav-caret { transform:perspective(600px) rotateX(0deg) translateY(-3px); box-shadow:0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(78,205,196,0.35), 0 1px 0 rgba(255,255,255,0.12) inset; border-color:rgba(78,205,196,0.45); }
+        .nav-group-label.active + .nav-caret { color:#ffd700; border-color:rgba(255,215,0,0.5); background:linear-gradient(180deg, rgba(255,215,0,0.15) 0%, rgba(255,215,0,0.04) 100%); box-shadow:0 6px 20px rgba(0,0,0,0.45), 0 0 14px rgba(255,215,0,0.25), 0 1px 0 rgba(255,255,255,0.10) inset; }
+        .nav-dropdown { display:none; position:absolute; top:calc(100% + 10px); left:50%; transform:translateX(-50%); background:rgba(15,20,45,0.97); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:8px 0; min-width:200px; z-index:1000; box-shadow:0 12px 40px rgba(0,0,0,0.6); }
+        .nav-group:hover .nav-dropdown { display:block; }
+        .nav-dropdown::before { content:''; position:absolute; top:-12px; left:0; right:0; height:12px; }
+        .nav-dropdown a { display:block; color:#ccc; text-decoration:none; padding:10px 24px; font-size:0.92em; transition:all 0.2s; white-space:nowrap; text-align:left; }
+        .nav-dropdown a:hover { color:#fff; background:rgba(78,205,196,0.15); }
+        .nav-dropdown a.active { color:#ffd700; background:rgba(255,215,0,0.08); }
+        @media (max-width:768px) {
+            .nav-toggle { display:block; margin:0 auto 8px; }
+            .nav-links { display:none; flex-direction:column; width:100%; gap:8px; align-items:center; }
+            .main-nav.open .nav-links { display:flex; }
+            .nav-links > a { text-align:center; }
+            .nav-group { width:auto; }
+            .nav-group-label { justify-content:center; }
+            .nav-dropdown { position:static; transform:none; background:rgba(255,255,255,0.04); border:none; box-shadow:none; border-radius:8px; margin-top:4px; min-width:auto; }
+            .nav-group:hover .nav-dropdown { display:none; }
+            .nav-group.open .nav-dropdown { display:block; }
+            .nav-group:hover .nav-caret { transform:none; }
+            .nav-group.open .nav-caret { transform:rotate(180deg); }
+            .nav-dropdown a { text-align:left; padding:8px 20px; }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 4px 15px rgba(78,205,196,0.4), 0 0 20px rgba(78,205,196,0.2), inset 0 1px 0 rgba(255,255,255,0.25); }
+            50% { box-shadow: 0 4px 20px rgba(78,205,196,0.6), 0 0 35px rgba(78,205,196,0.35), inset 0 1px 0 rgba(255,255,255,0.25); }
+        }
+        .scroll-top {
+            position: fixed; bottom: 30px; right: 30px; width: 48px; height: 48px;
+            background: linear-gradient(135deg, #4ecdc4 0%, #3ab5ad 50%, #2a9d8f 100%);
+            color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%;
+            font-size: 1.4rem; cursor: pointer; display: none; z-index: 50;
+            transition: transform 0.25s, box-shadow 0.25s; animation: glowPulse 3s ease-in-out infinite;
+        }
+        .scroll-top:hover { transform: translateY(-3px) scale(1.08); }
+    </style>
+</head>
+<body>
+
+    <div class="site-header">
+        <nav class="main-nav" id="mainNav">
+            <button class="nav-toggle" onclick="document.getElementById('mainNav').classList.toggle('open')" aria-label="Menu">&#9776;</button>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <div class="nav-group" onclick="this.classList.toggle('open')">
+                    <a href="/facts" class="nav-group-label" onclick="event.stopPropagation()">Voyager 1</a><span class="nav-caret" onclick="event.stopPropagation(); this.parentElement.classList.toggle('open')">&#9660;</span>
+                    <div class="nav-dropdown">
+                        <a href="/facts">Facts</a>
+                        <a href="/trajectory">Trajectory</a>
+                        <a href="/plasma">Plasma Waves</a>
+                        <a href="/density">Density</a>
+                        <a href="/dashboard">Magnetometer</a>
+                        <a href="/voyager-story">The Voyager Story</a>
+                    </div>
+                </div>
+                <div class="nav-group" onclick="this.classList.toggle('open')">
+                    <a href="/space-intelligence" class="nav-group-label" onclick="event.stopPropagation()">Space Intelligence</a><span class="nav-caret" onclick="event.stopPropagation(); this.parentElement.classList.toggle('open')">&#9660;</span>
+                    <div class="nav-dropdown">
+                        <a href="/space-intelligence">NEOs & Space Weather</a>
+                        <a href="/orbital-density">Orbital Density</a>
+                        <a href="/live-orbit">Live Orbit 3D</a>
+                    </div>
+                </div>
+                <div class="nav-group" onclick="this.classList.toggle('open')">
+                    <a href="/atlas" class="nav-group-label active" onclick="event.stopPropagation()">Deep Research</a><span class="nav-caret" onclick="event.stopPropagation(); this.parentElement.classList.toggle('open')">&#9660;</span>
+                    <div class="nav-dropdown">
+                        <a href="/atlas">3I/ATLAS</a>
+                        <a href="/blackhole">Black Hole</a>
+                        <a href="/andromeda" class="active">Andromeda</a>
+                        <a href="/mars">Mars (1993)</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="dr-subnav">
+        <a href="/atlas">3I/ATLAS</a>
+        <a href="/blackhole">Black Hole</a>
+        <a href="/andromeda" class="active">Andromeda</a>
+        <a href="/mars">Mars (1993)</a>
+    </div>
+
+    <article class="paper">
+
+        <h1 class="paper-title">Andromeda: How Certain Is Our Galactic Future?</h1>
+        <p class="paper-subtitle">Same model, one updated measurement, opposite headlines</p>
+
+        <div class="author-block">
+            <strong>Prabhu Sadasivam</strong><br>
+            ORCID: <a href="https://orcid.org/0009-0008-0069-693X" target="_blank" rel="noopener">0009-0008-0069-693X</a>
+        </div>
+
+        <div class="status-box">
+            <span><strong>Research in progress</strong> &middot; Stage 1 of 5 complete (28 October 2026)</span>
+            <span>Next: a dated forecast before <strong>Gaia Data Release 4</strong> (2 December 2026)</span>
+        </div>
+
+        <div class="hero-figures">
+            <div class="hero-figure">
+                <div class="value value-2025">52%</div>
+                <div class="label">chance of a Milky Way&ndash;Andromeda merger within 9.8 billion years, using 2025 inputs</div>
+            </div>
+            <div class="hero-figure">
+                <div class="value value-2026">90%</div>
+                <div class="label">the same model with Andromeda&rsquo;s motion re-measured in 2025 (2026 inputs)</div>
+            </div>
+            <div class="hero-figure">
+                <div class="value value-lmc">1.2&nbsp;Gyr</div>
+                <div class="label">typical time until our first galactic collision&mdash;with the Large Magellanic Cloud, not Andromeda</div>
+            </div>
+        </div>
+
+        <div class="intro-box">
+            <div class="intro-label">Why This Research</div>
+            <p>
+                On a dark night, Andromeda is a faint smudge: the nearest large galaxy, about 2.5 million light-years away, and one of the most distant objects the naked eye can see. Most of us grew up with a simple story about it: Andromeda is heading straight for us, and in about four or five billion years the two galaxies will collide.
+            </p>
+            <p>
+                In 2025 a team led by Till Sawala re-ran that forecast with modern data and found it was closer to a coin flip. In March 2026 another team, led by Hao Wu, used largely the same model with a re-measured motion for Andromeda and found a 90% chance. Neither result is wrong. They answer the same question with different inputs, and the difference is the most interesting part of the story.
+            </p>
+            <p>
+                This page follows that difference. I have reproduced both forecasts from the published code, and before Gaia&rsquo;s next data release I will publish a dated forecast stating, in advance, what new measurements would change it.
+            </p>
+        </div>
+
+        <h2><span class="beat">1</span>The blueshift is mostly us</h2>
+        <p>
+            In 1912 Vesto Slipher measured Andromeda&rsquo;s spectrum and found it shifted toward blue: the galaxy is approaching. Relative to the Sun, it approaches at about <strong>300&nbsp;km/s</strong>. But the Sun itself is orbiting the centre of the Milky Way at about 250&nbsp;km/s, and part of that orbit carries us toward Andromeda. Measured galaxy to galaxy, the approach is only about <strong>110&nbsp;km/s</strong>.
+        </p>
+        <p>
+            Most of the famous blueshift is our own motion. The galaxies are approaching each other, but more gently than the raw number suggests.
+        </p>
+
+        <h2><span class="beat">2</span>The sideways motion decides everything</h2>
+        <p>
+            Approaching does not mean colliding. Two ships heading toward each other can still pass side by side. What matters is Andromeda&rsquo;s sideways motion across our sky, its <em>proper motion</em>, and it is extraordinarily small. The conversion from angular motion to speed is:
+        </p>
+        <p class="equation">v<sub>&perp;</sub> [km/s] = 4.74 &times; &mu; [mas/yr] &times; D [kpc]</p>
+
+        <details class="explainer">
+            <summary>HOW TO READ THIS EQUATION</summary>
+            <div class="explainer-body">
+                <p>
+                    Stand on a bridge and watch two cars. One is close, one is far away. Even if both drive at the same speed, the far one <em>looks</em> slower: it creeps across your view. To work out how fast a distant thing is really moving sideways, you need two numbers: how fast it seems to creep across your view, and how far away it is.
+                </p>
+                <ul>
+                    <li><strong>v<sub>&perp;</sub></strong> is the real sideways speed we want, in kilometres per second.</li>
+                    <li><strong>&mu;</strong> (the Greek letter &ldquo;mu&rdquo;) is how fast Andromeda appears to creep across the sky, its <em>proper motion</em>. It is measured in milliarcseconds per year, tiny slices of an angle.</li>
+                    <li><strong>D</strong> is the distance, in kiloparsecs. One kiloparsec is about 3,260 light-years.</li>
+                    <li><strong>4.74</strong> is just a unit converter. It turns &ldquo;angle per year times distance&rdquo; into &ldquo;kilometres per second&rdquo;, the way 2.54 turns inches into centimetres.</li>
+                </ul>
+                <p>Worked example for Andromeda:</p>
+                <div class="worked">
+                    &mu; = 0.010 mas/yr (that is 10 micro-arcseconds per year)<br>
+                    D = 780 kpc<br>
+                    v<sub>&perp;</sub> = 4.74 &times; 0.010 &times; 780 &asymp; 37 km/s
+                </div>
+                <p>
+                    So a creep across the sky that is far too small for any eye or ordinary telescope to see still means Andromeda is sliding sideways at about 37 km/s&mdash;roughly 130,000 km/h. Because Andromeda is so far away, even the tiniest measurement error in &mu; turns into a big difference in speed, and that difference decides whether the galaxies meet head-on or swing past each other.
+                </p>
+            </div>
+        </details>
+        <p>
+            At Andromeda&rsquo;s distance of about 780&nbsp;kpc, a sideways drift of just <strong>10 micro-arcseconds per year</strong>&mdash;roughly the width of a coin seen from about 500,000&nbsp;km away, a bit farther than the Moon&mdash;corresponds to about <strong>37&nbsp;km/s</strong>. Current measurements carry uncertainties of about 7 to 8 micro-arcseconds per year in each direction. That is enough to separate a head-on approach from a wide pass.
+        </p>
+
+        <h2><span class="beat">3</span>Same model, one key input, opposite headlines</h2>
+        <p>
+            Both published forecasts use the same approach: represent the four largest galaxies of our neighbourhood (the Milky Way, Andromeda, Triangulum/M33, and the Large Magellanic Cloud) as dark-matter halos, sample their uncertain masses, distances, and motions 10,000 times, and integrate every possible future for about ten billion years. I ported the published code, tested it line by line against the original, and re-ran both studies:
+        </p>
+
+        <details class="explainer">
+            <summary>How the simulation works, in plain words</summary>
+            <div class="explainer-body">
+                <p>
+                    Think of a weather forecast that says &ldquo;70% chance of rain&rdquo;. Forecasters don&rsquo;t know today&rsquo;s air exactly, so they run their model many times with slightly different starting conditions and count how often it rains. This forecast works the same way.
+                </p>
+                <ol>
+                    <li><strong>Start from measurements, with their error bars.</strong> Every input&mdash;each galaxy&rsquo;s mass, distance, and motion&mdash;is known only within a range. The model picks one plausible value for each, within the measured range.</li>
+                    <li><strong>Let gravity play forward.</strong> Starting from today, the computer moves all four galaxies forward one million years at a time, pulled by each other&rsquo;s gravity, for about ten billion years: 10,000 small steps.</li>
+                    <li><strong>Add the drag.</strong> Each galaxy sits inside a huge cloud of dark matter. When one galaxy moves through another&rsquo;s cloud, it leaves a gravitational &ldquo;wake&rdquo; behind it that pulls it back, like a boat slowing in thick water. Astronomers call this <em>dynamical friction</em>. It is what lets two galaxies that pass close spiral in and merge, instead of flying apart.</li>
+                    <li><strong>Repeat 10,000 times.</strong> Each run gets a fresh set of plausible inputs. If 9,010 of 10,000 runs end in a merger, the forecast is about 90%.</li>
+                </ol>
+                <p>
+                    The percentage is not a guess. It is a count of how often the model&rsquo;s futures end in a merger, given what we currently know. When the measurements improve, the range of plausible inputs narrows, and the percentage can move&mdash;which is exactly what happened between 2025 and 2026.
+                </p>
+            </div>
+        </details>
+
+        <div class="figure-block">
+            <a href="/images/andromeda_futures_large.png" class="zoomable" id="futuresZoom" aria-label="Open a larger version of the simulated futures chart">
+                <img src="/images/andromeda_futures.png" alt="Two panels of simulated Milky Way-Andromeda distances over time. With 2025 inputs, 52% of futures merge; with 2026 inputs, 90% merge, mostly 4 to 8 billion years from now." loading="lazy">
+                <span class="zoom-hint">Click to enlarge</span>
+            </a>
+            <p class="figure-caption">Each line is one simulated future of the Milky Way&ndash;Andromeda distance (200 of 10,000 per panel). Tick marks show when a merger occurs. Left: 2025 inputs. Right: 2026 inputs, with Andromeda&rsquo;s motion re-measured.</p>
+            <p class="figure-provenance">Produced by Prabhu&rsquo;s Deep Space Labs from our own reproduction runs (28 October 2026) of the published Sawala et al. model, using each paper&rsquo;s inputs. This is not a figure taken from either paper.</p>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Quantity</th><th>2025 inputs (Sawala)</th><th>2026 inputs (Wu)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Merger within 9.8 billion years: my reproduction</td><td class="num">52.3%</td><td class="num">90.1%</td></tr>
+                    <tr><td>Merger within 9.8 billion years: published</td><td class="num">just over 50%</td><td class="num">90%</td></tr>
+                    <tr><td>Typical merger time, if they merge</td><td class="num">7.4 billion years</td><td class="num">6.4 billion years</td></tr>
+                    <tr><td>Andromeda&rsquo;s sideways motion used (&mu;<sub>&alpha;*</sub>, &mu;<sub>&delta;</sub>), &mu;as/yr</td><td class="num">48.9, &minus;36.9</td><td class="num">45.9, &minus;20.5</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            The main change is one input: Andromeda&rsquo;s proper motion. In 2025, Wu and colleagues traced a long-standing disagreement in Gaia measurements of Andromeda to a calibration difference between two kinds of Gaia astrometric solution. Correcting it gave a smaller sideways speed, a more head-on orbit, and a much higher chance of merging. (The 2026 study also adjusted Andromeda&rsquo;s halo concentration and Triangulum&rsquo;s motion; separating their effects is part of the next stage.)
+        </p>
+        <p class="note">
+            Percentages are the fraction of simulated futures that merge within the model horizon. They are conditional on the model and its inputs, and the two results should not be averaged.
+        </p>
+
+        <h2><span class="beat">4</span>Our next galactic collision isn&rsquo;t Andromeda</h2>
+        <p>
+            The Large Magellanic Cloud, the bright satellite galaxy visible from the southern hemisphere, falls into the Milky Way first. In both reproductions it merges with our galaxy in essentially every simulated future, typically about <strong>1.2 billion years</strong> from now (most futures between 0.9 and 1.8 billion years). That merger happens long before any encounter with Andromeda, and it nudges the Milky Way&rsquo;s own motion enough to change the Andromeda forecast&mdash;in opposite directions depending on Andromeda&rsquo;s exact path.
+        </p>
+
+        <h2><span class="beat">5</span>Three clocks</h2>
+        <p>
+            &ldquo;Will Andromeda hit us?&rdquo; quietly assumes that &ldquo;us&rdquo; will still be here, unchanged. Three clocks run on very different timelines:
+        </p>
+        <div class="clock-grid">
+            <div class="clock earth">
+                <h3>Earth&rsquo;s biosphere</h3>
+                <p>The Sun brightens slowly as it ages. Earth&rsquo;s surface is expected to become uninhabitable long before any galactic encounter. The timing depends on climate models; I will cite those estimates in a later update.</p>
+            </div>
+            <div class="clock sun">
+                <h3>The Sun</h3>
+                <p>The Sun is too light to become a neutron star. It will swell into a red giant and end as a white dwarf. One detailed solar model places the red giant&rsquo;s largest size about 7.6 billion years from now.</p>
+            </div>
+            <div class="clock galaxy">
+                <h3>The galaxies</h3>
+                <p>The LMC merges in about 1.2 billion years. Andromeda&rsquo;s first close pass comes in about 5 billion years in the 2026 model, and a merger, if it happens, typically about 6.4 billion years from now.</p>
+            </div>
+        </div>
+        <p>
+            Our home is likely to be transformed by the Sun long before Andromeda arrives. Placing these clocks on one timeline is a later stage of this research.
+        </p>
+
+        <h2><span class="beat">6</span>A forecast with a date on it</h2>
+        <p>
+            ESA plans to publish <strong>Gaia Data Release 4</strong> on <strong>2 December 2026</strong>, with 66 months of observations. Better proper motions for Andromeda will follow&mdash;not on release day, since deriving them takes careful analysis, but in the weeks and months after.
+        </p>
+        <p>Before 2 December, I will publish:</p>
+        <ol>
+            <li>The reproduced merger probability under current data, with its uncertainty.</li>
+            <li>A map of how the probability changes across Andromeda&rsquo;s possible sideways motions.</li>
+            <li>Which new measurements would raise it, lower it, or leave it essentially unchanged&mdash;stated in advance.</li>
+            <li>A fixed rule for the update: substitute the new proper motions, change nothing else, and show the result beside the original forecast.</li>
+        </ol>
+        <p>
+            The probability map itself has already been published by Wu and colleagues. What this page adds is the commitment in advance, and the open update afterwards.
+        </p>
+
+        <div class="leadership">
+            <div class="intro-label">Leadership Insight</div>
+            <p>
+                Two capable teams, largely the same model, and essentially one changed measurement turned &ldquo;coin flip&rdquo; into &ldquo;likely&rdquo;. Neither team was careless. The forecast was simply most sensitive to the input that was hardest to measure.
+            </p>
+            <p>
+                <strong>Know which input your decision is most sensitive to, and say in advance what evidence would change your mind.</strong> A forecast becomes useful not when it sounds certain, but when everyone can see what would move it.
+            </p>
+        </div>
+
+        <h2>Method and Limitations</h2>
+        <ul>
+            <li><strong>Model.</strong> A semi-analytic model from Sawala et al. (2025): four galaxies as softened point masses with NFW dark-matter halos, Chandrasekhar dynamical friction, and a merger declared when two galaxies come within 20&nbsp;kpc. Not a full simulation of stars and gas.</li>
+            <li><strong>Reproduction.</strong> A vectorized port of the public code (commit <code>e04820e</code>), tested against the original notebook&rsquo;s own functions; 10,000 samples per configuration.</li>
+            <li><strong>Time units.</strong> The published code&rsquo;s time unit is 0.978 billion years, labelled as one billion. This page reports physical years: the published &ldquo;10&nbsp;Gyr&rdquo; horizon is 9.8 billion years.</li>
+            <li><strong>Uncertainty shown.</strong> Monte Carlo sampling error on the merger fractions is under one percentage point. Model and systematic uncertainty is larger and is the subject of a later stage. For example, the model&rsquo;s friction term reverses sign at separations of about 20&ndash;32&nbsp;kpc, close to typical first passes, and its effect has not yet been tested.</li>
+        </ul>
+
+        <h2>Sources</h2>
+        <ol class="sources">
+            <li>Sawala, T. et al. (2025). <em>No certainty of a Milky Way&ndash;Andromeda collision.</em> Nature Astronomy 9, 1206. <a href="https://doi.org/10.1038/s41550-025-02563-1" target="_blank" rel="noopener">doi:10.1038/s41550-025-02563-1</a></li>
+            <li>Wu, H. et al. (2026). <em>The Fate of the Milky Way&ndash;Andromeda System: To Merge or Not?</em> Accepted, ApJ Letters. <a href="https://arxiv.org/abs/2603.22863" target="_blank" rel="noopener">arXiv:2603.22863</a></li>
+            <li>Wu, H. et al. (2025). <em>Revisiting the proper motions of M31 and M33 using massive supergiant stars with Gaia DR3.</em> A&amp;A 701, A265. <a href="https://doi.org/10.1051/0004-6361/202555477" target="_blank" rel="noopener">doi:10.1051/0004-6361/202555477</a></li>
+            <li>van der Marel, R. P. et al. (2012). <em>The M31 Velocity Vector. III.</em> ApJ 753, 9. <a href="https://arxiv.org/abs/1205.6865" target="_blank" rel="noopener">arXiv:1205.6865</a></li>
+            <li>Schr&ouml;der, K.-P. &amp; Smith, R. C. (2008). <em>Distant future of the Sun and Earth revisited.</em> MNRAS 386, 155. <a href="https://arxiv.org/abs/0801.4031" target="_blank" rel="noopener">arXiv:0801.4031</a></li>
+            <li>ESA. <em>Gaia data release scenario.</em> <a href="https://www.cosmos.esa.int/web/gaia/release" target="_blank" rel="noopener">cosmos.esa.int/web/gaia/release</a></li>
+            <li>Sawala, T. <em>MW-M31 public research code.</em> <a href="https://github.com/TillSawala/MW-M31" target="_blank" rel="noopener">github.com/TillSawala/MW-M31</a> (GPL-3.0)</li>
+        </ol>
+
+        <div class="paper-footer">
+            Last updated 29 October 2026 &middot; Numbers on this page are reproductions of published models, not new predictions.<br>
+            &copy; 2026 Prabhu Sadasivam &middot; Prabhu's Deep Space Labs
+        </div>
+
+    </article>
+
+    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Scroll to top">↑</button>
+
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Enlarged chart">
+        <button class="lightbox-close" id="lightboxClose" aria-label="Close enlarged chart">&times;</button>
+        <img id="lightboxImg" alt="">
+    </div>
+
+    {% set footer_class = 'site-footer' %}
+    {% set wrap_container = false %}
+    {% set data_links = [
+        {'url': 'https://arxiv.org/abs/2603.22863', 'label': 'Wu et al. (2026)', 'external': True},
+        {'url': 'https://doi.org/10.1038/s41550-025-02563-1', 'label': 'Sawala et al. (2025)', 'external': True},
+        {'url': 'https://www.cosmos.esa.int/web/gaia/release', 'label': 'ESA Gaia', 'external': True}
+    ] %}
+    {% set data_credit = 'Model: Sawala et al. (2025), public code; data: ESA Gaia, HST' %}
+    {% include '_footer.html' %}
+
+    <script>
+        window.addEventListener('scroll', function() {
+            document.getElementById('scrollTop').style.display = window.scrollY > 400 ? 'block' : 'none';
+        });
+
+        (function() {
+            var trigger = document.getElementById('futuresZoom');
+            var box = document.getElementById('lightbox');
+            var img = document.getElementById('lightboxImg');
+            var closeBtn = document.getElementById('lightboxClose');
+
+            function close() {
+                box.classList.remove('open');
+                trigger.focus();
+            }
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                img.src = trigger.getAttribute('href');
+                img.alt = trigger.querySelector('img').alt;
+                box.classList.add('open');
+                closeBtn.focus();
+            });
+            box.addEventListener('click', close);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && box.classList.contains('open')) close();
+            });
+        })();
+    </script>
+</body>
+</html>
