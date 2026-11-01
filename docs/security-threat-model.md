@@ -2,7 +2,7 @@
 
 **Author:** Prabhu Sadasivam  
 **Classification:** Public  
-**Last Updated:** 2026-04-20 — Expanded scope to cover full platform after portal separation (DSR-042)
+**Last Updated:** 2026-11-01 — §13.10: WA-1 and WA-2 remediated (OS release upgrade; rate limiter behind proxy)
 
 ## Table of Contents
 
@@ -661,4 +661,86 @@ The portal is a **public-facing Flask web application** deployed on AWS EC2, ser
 
 - **SRI tradeoff (WLO-2):** Importmap-based ES module loading does not yet have broad SRI support. Risk is mitigated by version pinning and vendor reputation but is not zero. Acceptable for a personal portal serving non-sensitive public data.
 - **Texture host availability (WLO-3):** `threejs.org` examples host is not under our control. If unavailable, scene renders without textures (unlit gray sphere); page remains functional.
+
+### 13.10 Security Assessment — 2026-10-29 (Andromeda Page + "Black October")
+
+*Triggered by the `/andromeda` release (issue #21) and the October 2026 "Black October" disclosure wave. Read-only assessment: no code or server changes were made.*
+
+#### Scope and Method
+
+| Area | How it was checked |
+|------|--------------------|
+| Production host (EC2, Amazon Linux 2023) | SSH, read-only: installed runtimes, package versions, pending advisories against the latest release, listening sockets, `sshd -T`, nginx config (`nginx -T`) |
+| Live site | HTTPS response headers; one benign malformed request to an API to observe error handling |
+| Portal code | Review of `app.py` request handling, rate limiter, error responses; all `innerHTML` sinks and `|safe` filters in templates; CDN scripts and SRI |
+| Python environments | Package inventory of every local `.venv` and the production venv |
+| New components | `/andromeda` page, `Images/andromeda_futures*.png`, public `andromeda-research` repository |
+
+#### "Black October" (October 2026) Exposure
+
+Sources: [Wikipedia: Black October (information security)](https://en.wikipedia.org/wiki/Black_October_(information_security)); [SecuCenter incident summary](https://www.secucenter.com/blog/black-october-2026-biggest-cyberattacks-list/).
+
+| Incident | Affects | Our exposure | Evidence |
+|----------|---------|--------------|----------|
+| PHP2Shell (CVE-2026-109618, CVE-2026-109619) | PHP runtime | **Not exposed** | No PHP binaries or RPMs on the server; no `.php` files in any repository |
+| Node.js / Brotli "Node2Shell" (CVE-2026-111497) | Node.js, Brotli decoder users | **Not exposed** | No Node.js on the server or in repositories; no `brotli` package in any Python environment, so `requests` does not decode Brotli |
+| LiteLLM 1.107.0 PyPI poisoning | Python environments | **Not exposed** | LiteLLM absent from all local venvs, global Python, and the production venv |
+| GitLab RCE (CVE-2026-110264) | Self-managed GitLab | **Not exposed** | Code hosted on GitHub; no GitLab instance |
+| eMudhra intermediate CA key compromise | TLS clients trusting system or `certifi` bundles | **Exposed (low likelihood)** | Production `certifi` 2026.2.25 and OS `ca-certificates` predate the 2026-10-17 disclosure; see WA-4 |
+| EDK II PXE pre-boot RCE (CVE-2026-97631) | Systems that network-boot | **Not applicable** | EC2 boots from EBS, not PXE; AWS manages host firmware |
+| Oracle EBS, Railway, Zeabur, OVHcloud CLI, WordPress plugins, ConnectWise | Specific products | **Not exposed** | None used |
+
+#### New Findings
+
+| ID | Severity | Finding | Evidence | Remediation | Priority |
+|----|:--------:|---------|----------|-------------|:--------:|
+| WA-1 | **High** | Production OS ~6 months behind on security patches | Amazon Linux 2023 is locked to release `2023.11.20260413`; `dnf updateinfo` reports 0 pending only for that release. Against the latest release `2023.12.20261028`: **395 advisories** (1 Critical, 248 Important, 137 Medium, 9 Low), including nginx 1.28.3 → 1.30.x (6 Important), OpenSSL 3.5.5 (4 Important), OpenSSH (Important), `sudo`, kernel, glibc, system `python3`, and `ca-certificates` (2 Medium, October). The single Critical advisory, ALAS2023-2026-3150, covers CVE-2023-45803 in the system Python's `urllib3`; the portal venv already has urllib3 2.6.3. | Take an EBS snapshot, then `sudo dnf upgrade --releasever=latest` and reboot; verify the site. Add a recurring patch cadence (e.g. monthly release upgrade, or `dnf-automatic` with release tracking). | **P0** |
+| WA-2 | **Medium** | Rate limiter keys every request to the proxy's address | Gunicorn listens on `127.0.0.1:8000` behind nginx, and `Limiter(get_remote_address)` runs without `ProxyFix`, so all visitors share one `10/minute` bucket. One client can exhaust the API budget for everyone (denial of service), and per-client limiting is not achieved. | Wrap the app with `werkzeug.middleware.proxy_fix.ProxyFix(app.wsgi_app, x_for=1, x_proto=1)`; nginx already sends `X-Forwarded-For`. Add a test asserting distinct client IPs get distinct buckets. | **P1** |
+| WA-3 | **Medium** | No HSTS or Content-Security-Policy on the live site | Live headers include `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, but not `Strict-Transport-Security` or `Content-Security-Policy` (re-confirms §13.5 #9). | Add HSTS first (low risk). Then a CSP allowing `self`, `cdn.jsdelivr.net`, `threejs.org` images, and the NASA/CelesTrak API hosts used client-side; start in `Content-Security-Policy-Report-Only`. | **P1** |
+| WA-4 | **Low** | CA bundles predate the eMudhra revocation | Production venv `certifi` 2026.2.25; local venvs 2025.8.3–2026.4.22; OS `ca-certificates` has October advisories. PyPI published `certifi` 2026.10.18, 2026.10.19 and 2026.10.23 immediately after the disclosure. Impact: outbound HTTPS to NASA/NOAA/CelesTrak could in principle trust a fraudulent certificate issued under a compromised intermediate. | `pip install -U certifi` in the production and local venvs (≥ 2026.10.23); the OS bundle is updated by WA-1. | **P1** |
+| WA-5 | **Low** | `/api/plasma` frequency parameters are not clamped, and errors echo exception text | `freq_min`/`freq_max` are passed straight to the analysis; `?freq_min=-5&freq_max=0` returned HTTP 200 with the raw Python exception message (re-confirms §13.5 #12). `hours`/`days` parameters are clamped correctly. | Clamp to a valid range (e.g. 1–100,000 Hz with `freq_min < freq_max`); return a generic error and log details server-side for all five `{'error': str(e)}` handlers. | P2 |
+| WA-6 | **Low** | Unescaped `innerHTML` on `/trajectory` timeline | `e.name`, `e.date`, `e.distance` interpolated without `esc()`. Values are server-side constants (mission milestones), not external data, so it is not currently exploitable. | Use `esc()` for consistency (§13.5 #7). | P3 |
+| WA-7 | **Low** | Portal dependencies unpinned | `requirements.txt` has no versions (re-confirms §13.5 #11); `docs/software-architecture.md` states the web app pins exact versions. | Pin with `pip freeze`, include `certifi>=2026.10.23`; enable Dependabot on the public repositories. | P2 |
+
+#### Re-Verified Controls (Working)
+
+| Control | Result |
+|---------|--------|
+| Exposed services | Only nginx (80/443) and sshd (22); Gunicorn bound to `127.0.0.1:8000` |
+| SSH hardening | `passwordauthentication no`, `kbdinteractiveauthentication no`, `permitrootlogin without-password`, key-only; 0 failed logins in the last 24 hours |
+| TLS | `ssl_protocols TLSv1.2 TLSv1.3`; AEAD cipher suites only; certificate auto-renewal verified 2026-10-27 |
+| Security headers | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` |
+| External data escaping | `space-intelligence`, `orbital-density`, and `live-orbit` escape all API-sourced strings with `esc()` |
+| SRI | KaTeX (3 resources) and Chart.js 4.4.7 carry `integrity` hashes; Three.js importmap remains the accepted exception (WLO-2) |
+| Image route | Path traversal guard intact; new Andromeda figures served from `Images/` only |
+| Debug mode | Off in production (`FLASK_DEBUG` unset); Gunicorn serves the app |
+
+#### New Components
+
+| Component | Assessment |
+|-----------|------------|
+| `/andromeda` page | Static template; no request parameters, no API, no external data. The lightbox reads only a fixed, server-rendered `href`. No new attack surface beyond a page route. |
+| Andromeda figures | Static PNGs generated offline from committed runs; served through the existing guarded image route. |
+| `andromeda-research` (public, GPL-3.0) | No network service. Pre-publication scan found no secrets, keys, or credentials; `.venv` and run arrays are excluded; `np.load` uses the default `allow_pickle=False`. Upstream model pinned as a submodule at a fixed commit. |
+
+#### Residual and Informational
+
+- **fail2ban absent:** acceptable while SSH is key-only and restricted by the security group; revisit if port 22 is ever opened more widely.
+- **System Python 3.9 on the host:** used only by OS tools; the portal runs in its own venv. Covered by WA-1.
+- **Development workstation venvs** (`3I-Atlas-Research`, `voyager1_project`) carry older `certifi`/`requests`; low risk, update with WA-4.
+
+#### Remediation Order
+
+1. **WA-1 (P0):** EBS snapshot → Amazon Linux release upgrade → reboot → smoke-test all routes. Requires a short maintenance window.
+2. **WA-2, WA-4 (P1):** `ProxyFix` + per-client limiter test; `certifi` upgrade in all venvs. Code change plus one deploy.
+3. **WA-3 (P1):** HSTS now; CSP in report-only mode, then enforce.
+4. **WA-5, WA-7 (P2), WA-6 (P3):** input clamping, generic errors, pinned requirements, `esc()` on the trajectory timeline.
+
+#### Remediation Status — 2026-11-01
+
+| ID | Status | Evidence |
+|----|--------|----------|
+| WA-1 | **Remediated** | EBS snapshot `snap-0850373be3d544821` taken first. `dnf upgrade --releasever=latest` moved the host to Amazon Linux `2023.12.20261102`, kernel 6.18.56; rebooted. `dnf updateinfo` against the latest release: **0** pending advisories. nginx 1.30.6, OpenSSL 3.5.8, openssh-server 9.9p1-16, sudo 1.9.15p5. SSH hardening, `certbot-renew.timer`, and all 17 public routes re-verified (HTTP 200). Recurring patch cadence still to be scheduled. |
+| WA-2 | **Remediated** | `ProxyFix(x_for=1, x_proto=1)` in `app.py` (commit `7ee5527`); `tests/test_rate_limit.py` asserts separate buckets per visitor and that prepended `X-Forwarded-For` entries cannot reset a limit. Live check: `/api/status` returns 429 after the limit for a single client. Note: `memory://` storage is per Gunicorn worker, so the effective limit is up to 10/minute per worker. |
+| WA-3 – WA-7 | Open | Unchanged; see Remediation Order. |
 
