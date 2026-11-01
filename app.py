@@ -567,6 +567,11 @@ def andromeda():
     """Milky Way-Andromeda encounter forecast research page."""
     return render_template('andromeda.html')
 
+@app.route('/andromeda/forecast')
+def andromeda_forecast():
+    """Pre-Gaia DR4 Milky Way-Andromeda forecast note."""
+    return render_template('andromeda_forecast.html')
+
 @app.route('/ai-index')
 def ai_index():
     """AI-friendly structured knowledge index for LLM and search crawlers."""
@@ -595,6 +600,7 @@ def sitemap():
         {'loc': 'https://prabhusadasivam.com/atlas', 'priority': '0.8', 'changefreq': 'weekly', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/blackhole', 'priority': '0.9', 'changefreq': 'monthly', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/andromeda', 'priority': '0.9', 'changefreq': 'weekly', 'lastmod': today},
+        {'loc': 'https://prabhusadasivam.com/andromeda/forecast', 'priority': '0.9', 'changefreq': 'monthly', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/mars', 'priority': '0.7', 'changefreq': 'yearly', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/ai-index', 'priority': '0.6', 'changefreq': 'weekly', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/architecture', 'priority': '0.7', 'changefreq': 'monthly', 'lastmod': today},

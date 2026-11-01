@@ -144,6 +144,8 @@ Act II turns orbits into consequences. Topic 5 is the centrepiece; Topics 6 and 
 
 **Boundary:** The Sun is not expected to become a neutron star. Main-sequence departure, red-giant maximum radius, and white-dwarf formation are distinct events. Do not assume a white dwarf at 4.5 or 6.5 Gyr from now: [R7], for example, places the red-giant-branch tip about 7.59 Gyr from now in its model. Determine phase from the chosen track. Habitability, physical survival, and gravitational binding are different outcomes.
 
+**Reader question (received 2026-11-01, after the Phase 1 page):** *"Is there an effect one galaxy has on another as they approach each other long before they actually collide? If there is, then there may be an effect of galactic motion long before the effect of our sun's demise."* Answer it explicitly on the three-clock timeline, and credit it as a reader question. Separate (a) mutual gravity acting now, the cause of the approach itself; (b) the onset of tidal distortion near first pericentre; (c) the redistribution of the Sun's galactic orbit during the merger; and (d) whether any of these reaches the Sun or Earth before the solar clock does. Reply already sent: gravity acts now, but local effects are negligible until about first pericentre. Source the merger-era claims before publishing (candidate: Cox & Loeb 2008, *The collision between the Milky Way and Andromeda*, MNRAS 386, 461; [arXiv:0705.1170](https://arxiv.org/abs/0705.1170)).
+
 ### Topic 6 (Explainer): Our Place in the Galaxy and the Future Sky
 
 **Question:** How could the Solar System's galactic location and the apparent sky change across plausible outcomes?
@@ -303,6 +305,7 @@ Stages 1 and 2 are deadline-driven by Gaia DR4. Stages 3 and 4 can run in parall
 **Covers:** Act II (Topics 4-7), linked to the encounter ensembles.
 
 - Build the three-clock timeline, the central storytelling figure, using a common time origin: elapsed time from the adopted present epoch, not total stellar age. Place the LMC merger on it.
+- Answer the Topic 5 reader question (pre-collision effects) on the timeline, with sources.
 - Assign solar phases from selected tracks; report alternative tracks separately unless defensible model weights exist. An initial independent-track overlay is a stated approximation, not a coupled simulation of stellar and galactic evolution.
 - Produce the bounded stellar-collision and planetary mass-loss examples with assumptions and units visible.
 - Build an angular-size illustration from validated trajectories. Defer predictive stellar migration, gas/starburst modelling, and photorealistic future skies unless suitable validated simulations are available.
@@ -366,7 +369,7 @@ Check these claims from the supplied material during Stage 3, before any reuse:
 ## Milestone Checklist
 
 - [x] M1 (target 18 November 2026): Parameter table frozen, [R3] baseline reproduced, validation report written. Completed 2026-10-28 in the sibling `andromeda-research` repository (commit `22f7b8d`): Wu (2026) 90.1% and Sawala (2025) 52.3% merger fractions reproduced; see its `docs/reproduction-log.md`.
-- [ ] M2 (deadline 1 December 2026): Pre-DR4 forecast, threshold, and decision rule public and timestamped.
+- [ ] M2 (deadline 1 December 2026): Pre-DR4 forecast, threshold, and decision rule public and timestamped. Built 2026-11-01: threshold and rule committed in `andromeda-research` (`2fd80a2`) before the 100,000-sample M31 proper-motion scan; note `docs/pre-dr4-forecast.md`; portal page `/andromeda/forecast`. Tick once tag `pre-dr4-forecast-v1` is pushed and the page is deployed.
 - [ ] M3: Forecasts reconciled, Topic 9 checks run, evidence ledger complete.
 - [ ] M4: Three-clock timeline and Act II explainers complete.
 - [ ] M5: DR4 update published; scientific review, reproducibility package, and Deep Research publication complete.
