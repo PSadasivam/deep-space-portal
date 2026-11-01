@@ -369,7 +369,7 @@ Check these claims from the supplied material during Stage 3, before any reuse:
 ## Milestone Checklist
 
 - [x] M1 (target 18 November 2026): Parameter table frozen, [R3] baseline reproduced, validation report written. Completed 2026-10-28 in the sibling `andromeda-research` repository (commit `22f7b8d`): Wu (2026) 90.1% and Sawala (2025) 52.3% merger fractions reproduced; see its `docs/reproduction-log.md`.
-- [ ] M2 (deadline 1 December 2026): Pre-DR4 forecast, threshold, and decision rule public and timestamped. Built 2026-11-01: threshold and rule committed in `andromeda-research` (`2fd80a2`) before the 100,000-sample M31 proper-motion scan; note `docs/pre-dr4-forecast.md`; portal page `/andromeda/forecast`. Tick once tag `pre-dr4-forecast-v1` is pushed and the page is deployed.
+- [x] M2 (deadline 1 December 2026): Pre-DR4 forecast, threshold, and decision rule public and timestamped. Completed 2026-11-01: threshold and rule committed in `andromeda-research` (`2fd80a2`) before the 100,000-sample M31 proper-motion scan; results `b39e80f`, tag `pre-dr4-forecast-v1`; note `docs/pre-dr4-forecast.md`; portal page `/andromeda/forecast` deployed (portal `26b43ed`).
 - [ ] M3: Forecasts reconciled, Topic 9 checks run, evidence ledger complete.
 - [ ] M4: Three-clock timeline and Act II explainers complete.
 - [ ] M5: DR4 update published; scientific review, reproducibility package, and Deep Research publication complete.
