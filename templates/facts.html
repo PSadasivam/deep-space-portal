@@ -345,10 +345,12 @@
             <a href="/voyager-story">The Voyager Story</a>
         </div>
 
+        {% include '_light_day_banner.html' %}
+
         <!-- Hero stat -->
         <div class="hero-stat">
             <div class="hero-number" style="font-size:3.2em">~{{ facts.light_time_one_way_hours }} hours</div>
-            <div class="hero-label">one-way light travel time from Earth — almost a full day at the speed of light</div>
+            <div class="hero-label">one-way light travel time from Earth{% if light_day.passed %} &mdash; more than a full day at the speed of light{% else %} &mdash; almost a full day at the speed of light{% endif %}</div>
             <div class="hero-sub">~{{ facts.distance_au }} AU &nbsp;·&nbsp; ~{{ facts.distance_km_billions }} billion km &nbsp;·&nbsp; ~{{ facts.distance_miles_billions }} billion miles</div>
         </div>
 
@@ -362,7 +364,7 @@
                 </div>
                 <div class="fact-card">
                     <div class="fact-highlight">~{{ facts.light_time_round_trip_hours }} hours</div>
-                    <div class="fact-text">The time it takes a radio signal, traveling at the speed of light, to travel from <strong>Earth to Voyager 1</strong> and back: nearly 2 full days.</div>
+                    <div class="fact-text">The time it takes a radio signal, traveling at the speed of light, to travel from <strong>Earth to Voyager 1</strong> and back: {% if light_day.passed %}more than 2 full days{% else %}nearly 2 full days{% endif %}.</div>
                 </div>
                 <div class="fact-card">
                     <div class="fact-highlight">73,000 years</div>

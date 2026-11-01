@@ -1,0 +1,71 @@
+{# Voyager 1 one light-day milestone banner. Uses the `light_day` context global from app.py. #}
+<style>
+    .light-day-banner {
+        max-width: 960px; width: 100%; margin: 18px auto 26px; padding: 16px 22px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap;
+        background: linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(78,205,196,0.10) 100%);
+        border: 1px solid rgba(255,215,0,0.35); color: #f2f2f2; text-align: left;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .light-day-banner .ld-kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #ffd700; }
+    .light-day-banner .ld-title { font-size: 1.05rem; font-weight: 600; margin-top: 4px; line-height: 1.45; }
+    .light-day-banner .ld-title time { color: #4ecdc4; font-weight: 700; }
+    .light-day-banner .ld-clock { display: flex; gap: 8px; font-variant-numeric: tabular-nums; }
+    .light-day-banner .ld-unit { min-width: 56px; text-align: center; padding: 6px 4px; border-radius: 8px; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.12); }
+    .light-day-banner .ld-num { display: block; font-size: 1.5rem; font-weight: 700; color: #fff; line-height: 1.1; }
+    .light-day-banner .ld-lbl { display: block; font-size: 0.66rem; letter-spacing: 1px; text-transform: uppercase; color: #aab; }
+    .light-day-banner .ld-link { color: #ffd700; font-weight: 600; font-size: 0.9rem; text-decoration: none; white-space: nowrap; }
+    .light-day-banner .ld-link:hover { text-decoration: underline; }
+    .light-day-banner .ld-link:focus-visible { outline: 2px solid #ffd700; outline-offset: 3px; border-radius: 4px; }
+    .light-day-banner .ld-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    @media (max-width: 700px) {
+        .light-day-banner { margin: 14px 12px 22px; }
+        .light-day-banner .ld-side { align-items: flex-start; }
+    }
+</style>
+<aside class="light-day-banner" id="lightDayBanner" data-target="{{ light_day.iso }}" aria-label="Voyager 1 one light-day milestone">
+    <div>
+        <div class="ld-kicker" id="ldKicker">{{ 'Milestone reached' if light_day.passed else 'Countdown to a milestone' }}</div>
+        <div class="ld-title" id="ldAfter" {% if not light_day.passed %}hidden{% endif %}>
+            Voyager 1 is now more than <strong>one light-day</strong> from Earth. It crossed the line on <time datetime="{{ light_day.iso }}">18 Nov 2026, 10:16 UTC</time>.
+        </div>
+        <div class="ld-title" id="ldBefore" {% if light_day.passed %}hidden{% endif %}>
+            Voyager 1 will be <strong>one light-day</strong> from Earth on <time datetime="{{ light_day.iso }}">18 Nov 2026, 10:16 UTC</time>, the first human-made object ever to get there.
+        </div>
+    </div>
+    <div class="ld-side">
+        <div class="ld-clock" id="ldClock" aria-live="off" {% if light_day.passed %}hidden{% endif %}>
+            <span class="ld-unit"><span class="ld-num" id="ldD">{{ light_day.days }}</span><span class="ld-lbl">days</span></span>
+            <span class="ld-unit"><span class="ld-num" id="ldH">{{ '%02d' % light_day.hours }}</span><span class="ld-lbl">hours</span></span>
+            <span class="ld-unit"><span class="ld-num" id="ldM">--</span><span class="ld-lbl">min</span></span>
+            <span class="ld-unit"><span class="ld-num" id="ldS">--</span><span class="ld-lbl">sec</span></span>
+        </div>
+        <a class="ld-link" href="/voyager-light-day">What one light-day means &rarr;</a>
+    </div>
+</aside>
+<script>
+    (function () {
+        var banner = document.getElementById('lightDayBanner');
+        if (!banner) return;
+        var target = Date.parse(banner.getAttribute('data-target'));
+        var clock = document.getElementById('ldClock');
+        var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+        function tick() {
+            var s = Math.floor((target - Date.now()) / 1000);
+            if (s <= 0) {
+                clock.hidden = true;
+                document.getElementById('ldKicker').textContent = 'Milestone reached';
+                document.getElementById('ldBefore').hidden = true;
+                document.getElementById('ldAfter').hidden = false;
+                return;
+            }
+            document.getElementById('ldD').textContent = Math.floor(s / 86400);
+            document.getElementById('ldH').textContent = pad(Math.floor(s % 86400 / 3600));
+            document.getElementById('ldM').textContent = pad(Math.floor(s % 3600 / 60));
+            document.getElementById('ldS').textContent = pad(s % 60);
+            setTimeout(tick, 1000);
+        }
+        tick();
+    })();
+</script>

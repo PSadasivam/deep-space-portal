@@ -69,8 +69,10 @@ from voyager1_position_model import (
     AU_KM,
     KM_MILES,
     LIGHT_SECONDS_PER_AU,
+    ONE_LIGHT_DAY_UTC,
     VOYAGER1_LAUNCH,
     voyager1_distance_au,
+    voyager1_earth_distance_au,
 )
 
 try:
@@ -89,7 +91,17 @@ app.secret_key = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 def inject_globals():
     """Globals available to every Jinja template (e.g. current_year for the footer)."""
     from datetime import datetime, timezone
-    return {'current_year': datetime.now(timezone.utc).year}
+    now = datetime.now(timezone.utc)
+    remaining = max(0, int((ONE_LIGHT_DAY_UTC - now).total_seconds()))
+    return {
+        'current_year': now.year,
+        'light_day': {
+            'iso': ONE_LIGHT_DAY_UTC.strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'passed': remaining == 0,
+            'days': remaining // 86400,
+            'hours': remaining % 86400 // 3600,
+        },
+    }
 
 
 limiter = Limiter(
@@ -494,7 +506,8 @@ def _voyager1_live_stats(today: datetime.date | None = None) -> dict:
     distance_au = voyager1_distance_au(today)
     distance_km = distance_au * AU_KM
     distance_miles = distance_km * KM_MILES
-    light_one_way_s = distance_au * LIGHT_SECONDS_PER_AU
+    # Radio signals cross the Earth-Voyager gap, not the Sun-Voyager distance.
+    light_one_way_s = voyager1_earth_distance_au(today) * LIGHT_SECONDS_PER_AU
     # Calendar-correct whole-years count (avoids leap-year drift from days//365).
     mission_age_years = today.year - VOYAGER1_LAUNCH.year - (
         1 if (today.month, today.day) < (VOYAGER1_LAUNCH.month, VOYAGER1_LAUNCH.day) else 0
@@ -575,6 +588,11 @@ def andromeda_forecast():
     """Pre-Gaia DR4 Milky Way-Andromeda forecast note."""
     return render_template('andromeda_forecast.html')
 
+@app.route('/voyager-light-day')
+def voyager_light_day():
+    """Voyager 1 one light-day milestone explainer."""
+    return render_template('voyager-light-day.html')
+
 @app.route('/ai-index')
 def ai_index():
     """AI-friendly structured knowledge index for LLM and search crawlers."""
@@ -597,6 +615,7 @@ def sitemap():
         {'loc': 'https://prabhusadasivam.com/density', 'priority': '0.8', 'changefreq': 'monthly', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/dashboard', 'priority': '0.8', 'changefreq': 'monthly', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/voyager-story', 'priority': '0.9', 'changefreq': 'monthly', 'lastmod': today},
+        {'loc': 'https://prabhusadasivam.com/voyager-light-day', 'priority': '0.9', 'changefreq': 'monthly', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/space-intelligence', 'priority': '0.9', 'changefreq': 'hourly', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/orbital-density', 'priority': '0.8', 'changefreq': 'daily', 'lastmod': today},
         {'loc': 'https://prabhusadasivam.com/live-orbit', 'priority': '0.8', 'changefreq': 'daily', 'lastmod': today},
