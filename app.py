@@ -45,6 +45,7 @@ import requests as http_requests
 from flask import Flask, render_template, jsonify, request, Response
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 import matplotlib.dates as mdates
 
 # Import science modules from voyager1_project
@@ -79,6 +80,8 @@ except ImportError:
     _CDFLIB_AVAILABLE = False
 
 app = Flask(__name__)
+# Gunicorn listens on localhost behind exactly one nginx hop, which appends the client IP to X-Forwarded-For.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(32).hex())
 
 
