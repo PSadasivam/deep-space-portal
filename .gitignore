@@ -25,6 +25,9 @@ Thumbs.db
 .env
 *.pem
 
+# Private ideation material (kept locally, cited by docs/andromeda-research-plan.md)
+PDSL_Ideation/
+
 # Database
 *.db
 *.db-wal
