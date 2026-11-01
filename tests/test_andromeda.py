@@ -53,6 +53,16 @@ def test_andromeda_page_links_to_forecast(client):
     assert 'href="/andromeda/forecast"' in client.get("/andromeda").get_data(as_text=True)
 
 
+@pytest.mark.parametrize("path, here, other", [("/andromeda", 1, "/andromeda/forecast"),
+                                               ("/andromeda/forecast", 2, "/andromeda")])
+def test_stage_roadmap_marks_current_stage_and_links_the_other(client, path, here, other):
+    html = client.get(path).get_data(as_text=True)
+    assert "The research in five stages" in html
+    assert html.count("You are here") == 1
+    assert html.index("You are here") > html.index(f"Stage {here}<")
+    assert f'class="stage-link" href="{other}"' in html
+
+
 @pytest.mark.parametrize("name", ["andromeda_forecast_map.png", "andromeda_forecast_map_large.png"])
 def test_forecast_figure_is_served(client, name):
     resp = client.get(f"/images/{name}")

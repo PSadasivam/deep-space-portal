@@ -302,6 +302,9 @@
             </p>
         </div>
 
+        {% set current_stage = 2 %}
+        {% include '_andromeda_stages.html' %}
+
         <h2><span class="beat">1</span>Today&rsquo;s forecast</h2>
         <p>
             The frozen forecast is my reproduction of the 2026 study by Wu and colleagues: <strong>90.1%</strong> of 10,000 simulated futures end in a merger within 9.8 billion years (sampling uncertainty 89.5&ndash;90.7%). It uses Andromeda&rsquo;s sideways drift as measured in 2025, <strong>45.9 &plusmn; 8.1</strong> micro-arcseconds per year eastward and <strong>&minus;20.5 &plusmn; 6.6</strong> northward. Every other input, the code version, and the random seeds are frozen at the git tag above.

@@ -1,0 +1,50 @@
+{# Andromeda research roadmap. Set `current_stage` (1-5) before including. #}
+<style>
+    .stage-roadmap { margin: 0 0 36px; }
+    .stage-roadmap .roadmap-intro { font-size: 0.95rem; line-height: 1.7; color: #333; margin-bottom: 14px; }
+    .stage-list { list-style: none; padding: 0 !important; margin: 0 !important; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .stage-card { border: 1px solid #e2e6f0; border-top: 4px solid #cbd2e1; border-radius: 0 0 8px 8px; background: #fafbfd; padding: 12px 12px 14px; margin: 0 !important; display: flex; flex-direction: column; }
+    .stage-card.done { border-top-color: #2563eb; }
+    .stage-card.current { border-color: #2563eb; background: #f0f5ff; box-shadow: 0 2px 10px rgba(37,99,235,0.15); }
+    .stage-card .stage-num { font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #6b7280; }
+    .stage-card .stage-name { font-size: 0.95rem; font-weight: 700; color: #111; margin: 4px 0 6px; line-height: 1.3; }
+    .stage-card .stage-when { font-size: 0.78rem; font-weight: 600; color: #1e3a8a; margin-bottom: 6px; }
+    .stage-card.planned .stage-when { color: #6b7280; }
+    .stage-card .stage-why { font-size: 0.82rem !important; line-height: 1.5 !important; color: #444; margin: 0 0 8px !important; flex: 1; }
+    .stage-card .stage-link { font-size: 0.82rem; font-weight: 600; text-decoration: none; }
+    .stage-card .stage-here { font-size: 0.82rem; font-weight: 700; color: #1e3a8a; }
+    .stage-card .stage-later { font-size: 0.82rem; color: #888; }
+    @media (max-width: 800px) { .stage-list { grid-template-columns: 1fr; } }
+</style>
+{% set stages = [
+    {'name': 'Reproduce the published forecasts', 'when': 'Complete · 28 Oct 2026', 'url': '/andromeda',
+     'why': 'Re-run both studies and match their numbers. A forecast you cannot reproduce cannot be tested.'},
+    {'name': 'Commit a forecast before Gaia DR4', 'when': 'Complete · 1 Nov 2026', 'url': '/andromeda/forecast',
+     'why': 'Write down, before new data exist, what would raise, lower, or leave the forecast unchanged.'},
+    {'name': 'Stress-test the model', 'when': 'From Dec 2026', 'url': None,
+     'why': 'Find where the model could be wrong: dark-matter halos, friction at close range, the Sun’s frame.'},
+    {'name': 'Connect the consequences', 'when': 'From Dec 2026, alongside Stage 3', 'url': None,
+     'why': 'Put Earth, the Sun, and the galaxies on one timeline, including what happens before any collision.'},
+    {'name': 'Update against Gaia DR4', 'when': 'When DR4-based measurements appear', 'url': None,
+     'why': 'Apply the fixed rule and publish the new forecast beside the old one, whatever it says.'},
+] %}
+<section class="stage-roadmap" aria-label="Andromeda research stages">
+    <h2>The research in five stages</h2>
+    <p class="roadmap-intro">
+        Each stage answers one question, in an order chosen so that no claim gets ahead of its evidence: reproduce first, commit before the new data, then test and interpret, then update in public. Stages 1 and 2 had to finish before Gaia Data Release 4 on 2 December 2026. Andromeda&rsquo;s motion from DR4 must be derived by astronomers after the release, which may take weeks to months, so Stage 5 waits for it.
+    </p>
+    <ol class="stage-list">
+        {% for s in stages %}
+        {% set n = loop.index %}
+        <li class="stage-card {{ 'current' if n == current_stage else ('done' if s.url else 'planned') }}">
+            <span class="stage-num">Stage {{ n }}</span>
+            <span class="stage-name">{{ s.name }}</span>
+            <span class="stage-when">{{ s.when }}</span>
+            <p class="stage-why">{{ s.why }}</p>
+            {% if n == current_stage %}<span class="stage-here">You are here</span>
+            {% elif s.url %}<a class="stage-link" href="{{ s.url }}">Read Stage {{ n }} &rarr;</a>
+            {% else %}<span class="stage-later">Planned</span>{% endif %}
+        </li>
+        {% endfor %}
+    </ol>
+</section>
