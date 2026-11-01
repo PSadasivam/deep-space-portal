@@ -66,6 +66,7 @@
         .nav-dropdown::before { content:''; position:absolute; top:-12px; left:0; right:0; height:12px; }
         .nav-dropdown a { display:block; color:#ccc; text-decoration:none; padding:10px 24px; font-size:0.92em; white-space:nowrap; text-align:left; }
         .nav-dropdown a:hover { color:#fff; background:rgba(78,205,196,0.15); }
+        .nav-dropdown a.active { color:#ffd700; background:rgba(255,215,0,0.08); }
         @media (max-width:768px) {
             .nav-toggle { display:block; margin:0 auto 8px; }
             .nav-links { display:none; flex-direction:column; width:100%; gap:8px; align-items:center; }
@@ -83,6 +84,7 @@
             border: 1px solid rgba(255,255,255,0.12);
         }
         .v1-subnav a:hover { color: #fff; border-color: rgba(78,205,196,0.4); }
+        .v1-subnav a.active { color: #ffd700; border-color: rgba(255,215,0,0.4); background: linear-gradient(180deg, rgba(255,215,0,0.15) 0%, rgba(255,215,0,0.04) 100%); }
 
         .article { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 40px 48px; }
         @media (max-width: 720px) { .article { padding: 26px 20px; } .header h1 { font-size: 2em; } }
@@ -144,6 +146,7 @@
                             <a href="/density">Density</a>
                             <a href="/dashboard">Magnetometer</a>
                             <a href="/voyager-story">The Voyager Story</a>
+                            <a href="/voyager-light-day" class="active">One Light-Day</a>
                         </div>
                     </div>
                     <div class="nav-group" onclick="this.classList.toggle('open')">
@@ -177,6 +180,7 @@
             <a href="/density">Density</a>
             <a href="/dashboard">Magnetometer</a>
             <a href="/voyager-story">The Voyager Story</a>
+            <a href="/voyager-light-day" class="active">One Light-Day</a>
         </div>
 
         {% include '_light_day_banner.html' %}

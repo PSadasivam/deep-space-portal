@@ -1,6 +1,8 @@
 """Tests for the Voyager 1 one light-day milestone: countdown banner, explainer page, story revision."""
 
 import datetime as dt
+import re
+from pathlib import Path
 
 import pytest
 
@@ -71,3 +73,15 @@ def test_story_revision_three_and_history(client):
 def test_light_time_uses_earth_distance_on_milestone_day():
     stats = portal_app._voyager1_live_stats(dt.date(2026, 11, 18))
     assert stats["light_time_one_way_hours"] == 24.0
+
+
+TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
+
+
+@pytest.mark.parametrize("template", sorted(p.name for p in TEMPLATES.glob("*.html")
+                                            if '>The Voyager Story</a>' in p.read_text(encoding="utf-8")))
+def test_every_voyager_menu_lists_light_day(template):
+    text = (TEMPLATES / template).read_text(encoding="utf-8")
+    menus = len(re.findall(r'<a href="/voyager-story"(?: class="active")?>The Voyager Story</a>\s*\n\s*<a href="/voyager-light-day"', text))
+    story_links = len(re.findall(r'\n\s*<a href="/voyager-story"(?: class="active")?>The Voyager Story</a>\s*\n\s*(?:<a|</div>)', text))
+    assert menus == story_links

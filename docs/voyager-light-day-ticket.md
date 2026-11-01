@@ -43,7 +43,8 @@ Started from two reader-shared items (`PDSL_Ideation/Voyager/`, local only): a n
 - [x] `/voyager-light-day`: comparison table, Horizons chart, three findings, one leadership insight (state the frame of reference), method, sources. In the sitemap and `/ai-index`.
 - [x] `/voyager-story` Revision 3: milestone in "About time"; Oct 18–20 self-recovery in section 7 (no new callout); Sept 2026 "Big Bang" in section 8; corrections (Jupiter ring system, Gliese 445 at 1.7 ly, 49 years); dated revision history (Revisions 1–3, from git history).
 - [x] `docs/the-voyager-story.md` synced to Revision 3.
-- [x] Tests: `tests/test_voyager_light_day.py` (banner before/after, NASA target time, page findings, figures, sitemap, story revision, Earth light-time); `voyager1_project/tests/test_earth_distance.py` (Horizons offsets, light-day constant).
+- [x] "One Light-Day" listed after "The Voyager Story" in every Voyager 1 dropdown, the Voyager sub-navigation, and the home-page CTA (17 templates).
+- [x] Tests: `tests/test_voyager_light_day.py` (banner before/after, NASA target time, page findings, figures, sitemap, story revision, Earth light-time, menus); `voyager1_project/tests/test_earth_distance.py` (Horizons offsets, light-day constant).
 
 ---
 
@@ -51,7 +52,6 @@ Started from two reader-shared items (`PDSL_Ideation/Voyager/`, local only): a n
 
 - Transmitter power: `/voyager-story` says 22 W, `/facts` says 23 W. No NASA source found yet; align once sourced.
 - Recalibrate `RATE_AU_PER_YR` / anchor at the annual Horizons reconciliation (`docs/facts-dynamic-ticket.md`).
-- `/voyager-light-day` is not in the Voyager 1 dropdown (duplicated across ~15 templates); linked from the banner and the story instead.
 
 ---
 
