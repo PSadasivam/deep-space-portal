@@ -1,7 +1,7 @@
 # The Voyager Story: A Whisper From the Edge
 ### What humanity's farthest machine teaches us about ambition, resilience, graceful decline, and building work that outlives us
 
-*Last updated: May 2026*
+*Last updated: 1 November 2026 · Revision 3 (see [Revision history](#revision-history)). Live page: `/voyager-story` (`templates/voyager-story.html`); this file is its text source and must be kept in sync.*
 
 ---
 
@@ -30,7 +30,7 @@ NASA built two spacecraft:
 
 Each was packed with cameras, spectrometers, magnetometers, and transmitters — every instrument that could be squeezed into the mass budget. The mission was designed to last **5 years, maybe 10**. Get to Jupiter. Get to Saturn. Send the data home. Then probably fail.
 
-It has now been **48 years**.
+It has now been **49 years**.
 
 > **Leadership Insights — Ship to the window, not to the wish.**
 > The Grand Tour was not built when the technology was ready. It was built when the *planets* were ready. The team accepted a hard, immovable deadline set by the universe itself, and bent every other constraint around it. Great missions — and great products — are shipped to the window that exists, not the one we wish we had.
@@ -58,7 +58,7 @@ It says, in the quietest possible way: **we were here, we wondered, and we wante
 
 ### Jupiter (March 1979, July 1979)
 
-Voyager 1 flew within **174,000 miles** of the cloud tops. The Great Red Spot — a storm larger than Earth — resolved into churning detail no telescope had ever seen. Lightning in the night side. Auroras at the poles. **Four faint rings** confirmed where none were expected.
+Voyager 1 flew within **174,000 miles** of the cloud tops. The Great Red Spot — a storm larger than Earth — resolved into churning detail no telescope had ever seen. Lightning in the night side. Auroras at the poles. **A faint ring system**, discovered where none was expected.
 
 And then the moons.
 
@@ -126,9 +126,11 @@ There is no day. No night. No sound. Just motion.
 
 There is something the distance does to time itself.
 
-Voyager 1 is now nearly a full day away in light-travel time. When we receive a signal, it is almost a day old. The spacecraft that sent it has already moved more than a million kilometers further out. **We are not communicating with Voyager. We are communicating with where Voyager *was*.** Every reading is a postcard from the past.
+On **18 November 2026, at 10:16 UTC**, Voyager 1 becomes the first human-made object **one light-day** from Earth: about **25.9 billion kilometers**, the distance light covers in 24 hours. It took 49 years, two months and eleven days to get there. From then on, every signal we receive is more than a day old. The spacecraft that sent it has already moved more than a million kilometers further out. **We are not communicating with Voyager. We are communicating with where Voyager *was*.** Every reading is a postcard from the past.
 
-Even here, inside our own solar system, we are already separated by time. Sunlight reaches us about 8 minutes after it leaves the Sun. A command to a Mars rover takes up to 22 minutes one way. With Voyager, the round trip is closer to two days.
+Even the milestone obeys that rule. Voyager crosses the line on the 18th, but the first signals that spend a full day in flight reach Earth early on the 19th. ([What one light-day means, checked against NASA's ephemeris](/voyager-light-day).)
+
+Even here, inside our own solar system, we are already separated by time. Sunlight reaches us about 8 minutes after it leaves the Sun. A command to a Mars rover takes up to 22 minutes one way. With Voyager, the round trip is now **two full days**: send a message, go home, and wait.
 
 Distance, beyond a certain point, *is* time. The two stop being separate things.
 
@@ -155,6 +157,7 @@ A spacecraft designed in the 1970s failed in interstellar space. The people who 
 
 This was not the first time. Decades earlier, when **Voyager 2's** primary radio receiver failed and its backup developed a faulty capacitor, engineers couldn't tune the spacecraft from Earth using the normal interface. They calculated the *exact* shifted frequencies — accounting even for the Doppler shift caused by Earth's rotation — and talked to it anyway. When the standard channel breaks, the Voyager team's answer has never been "give up." It is "find the frequency that still works."
 
+In **October 2026**, the spacecraft saved itself. On two scheduled contacts, **24 hours apart on October 18 and 19**, the Deep Space Network heard nothing. On **October 20** the signal came back, before the team had sent a single command. One set of thrusters had gone offline; Voyager's fault protection had switched to the backups, put the spacecraft into a safe state, and waited for Earth. "This is the first time we've seen the spacecraft do something like this," said mission manager Kareem Badaruddin. The rescue was built into the spacecraft: fault-protection routines take up roughly a tenth of its command computer's memory.
 > **Leadership Insights from the long save**
 >
 > ***Design for people who are not yet in the room.*** Systems that matter must be designed for people who are not yet in the room. The **architecture has to outlive the team**. The **documentation has to outlive the memory**. The **mission has to outlive the original builders**. The 2023 save happened because someone, half a century earlier, wrote things down carefully enough to be useful to strangers.
@@ -180,9 +183,11 @@ Voyager is powered by three **Radioisotope Thermoelectric Generators (RTGs)** �
 
 The cameras were turned off in 1990, after the Pale Blue Dot. The plasma science instrument went dark in 2007. The planetary radio astronomy instrument in 2008. In **February 2025**, the cosmic ray subsystem on Voyager 1 was switched off — not because it broke, but to keep the mission alive a little longer. On **April 17, 2026**, NASA powered down Voyager 1's **Low-Energy Charged Particle (LECP)** instrument.
 
-As of mid-2026, **Voyager 1 has just two operating science instruments**: the **magnetometer (MAG)** and the **plasma wave subsystem (PWS)**. Voyager 2 carries a similarly trimmed payload. One by one, instruments and heaters are being retired. Each shutdown buys time. Engineers believe they can keep at least one instrument alive into the **2030s**, and the spacecraft may remain in contact until **around 2036**.
+Then, in **September 2026**, the team pulled off a manoeuvre they nicknamed the **"Big Bang"**: switching off three devices and swapping in three lower-power alternatives, all at once. The six devices also keep the spacecraft warm, and only a simultaneous swap could both cut power and keep the heat where it was needed. They had made the same swap on Voyager 2 about six weeks earlier. Without it, another Voyager 1 instrument could have gone dark as early as **summer 2027**.
 
-Then, one day, a signal will not arrive. We will wait the usual 23 hours. Another day. Another week. And we will know.
+As of November 2026, **Voyager 1 has two operating science instruments**: the **magnetometer (MAG)** and the **plasma wave subsystem (PWS)**. Voyager 2 carries a similarly trimmed payload. One by one, instruments and heaters are being retired. Each shutdown buys time. Engineers believe they can keep at least one instrument alive into the **2030s**, and the spacecraft may remain in contact until **around 2036**.
+
+Then, one day, a signal will not arrive. We will wait the usual day. Another day. Another week. And we will know.
 
 > **Leadership Insights — Longevity requires pruning.**
 > Every watt matters. Every instrument competes with every other instrument. Keeping *everything* alive is no longer leadership. Keeping the *mission* alive is. That is a profound lesson for any long-lived platform, product, or organization: **growth requires ambition; longevity requires pruning**. The discipline is knowing what must end so the core can continue.
@@ -195,7 +200,7 @@ When the last transmission ends, **Voyager does not stop**.
 
 It will keep moving at roughly 38,000 mph through a void so empty that, even at that speed, it could travel thousands of years without striking anything solid. No course corrections. No adjustments. No signals home. Just motion.
 
-- In about **40,000 years**, Voyager 1 will pass within **1.6 light-years** of a star named **Gliese 445** — not close enough to be captured, just drifting by.
+- In about **40,000 years**, Voyager 1 will pass within **1.7 light-years** of a star named **Gliese 445** — not close enough to be captured, just drifting by.
 - In **296,000 years**, Voyager 2 will pass within **4.3 light-years** of **Sirius**, the brightest star in our night sky.
 
 By then, Earth will be unrecognizable. Ice ages will have come and gone. Continents will have shifted by kilometers. Species will have evolved and disappeared. Human civilization may be spread across the stars, transformed beyond recognition, or simply gone.
@@ -210,7 +215,7 @@ A monument to a species that once looked up, wondered what was out there, and bu
 
 ## 10. What Voyager teaches us about how to work
 
-A short field guide for builders, drawn from a 48-year mission still in progress:
+A short field guide for builders, drawn from a 49-year mission still in progress:
 
 1. **Ship to the window the universe gives you.** Real deadlines come from physics, customers, and rare alignments — not from internal calendars.
 2. **Build the Golden Record.** Always include the part of the project that has no metric attached but carries the meaning.
@@ -228,7 +233,7 @@ A short field guide for builders, drawn from a 48-year mission still in progress
 
 One day, the last signal will leave Voyager.
 
-Almost a day later, it will reach Earth.
+More than a day later, it will reach Earth.
 
 And then there will be silence.
 
@@ -253,13 +258,16 @@ Voyager is not only a story about how far a spacecraft can travel. It is a story
 
 ## Sources and credits
 
-This page synthesizes NASA mission material, Carl Sagan's writings, and publicly available documentary transcripts. Mission facts are stated to the best of public knowledge as of **May 2026**; later refinements (notably by **Cassini–Huygens** at Saturn and Titan) are credited to the follow-up mission. The leadership reflections are the author's own.
+This page synthesizes NASA mission material, Carl Sagan's writings, and publicly available documentary transcripts. Mission facts are stated to the best of public knowledge as of **November 2026**; later refinements (notably by **Cassini–Huygens** at Saturn and Titan) are credited to the follow-up mission. The leadership reflections are the author's own.
 
 ### Primary sources
 
 - **NASA / Jet Propulsion Laboratory — Voyager Mission** — official mission status, instrument logs, RTG power profile, distance and velocity telemetry. <https://voyager.jpl.nasa.gov/>
 - **NASA Deep Space Network (DSN)** — tracking, antenna configuration, signal-strength references. <https://www.nasa.gov/communicating-with-missions/dsn/>
 - **NASA / JPL Voyager status updates** — Nov 2023–Apr 2024 Flight Data System anomaly and recovery; Feb 2025 Cosmic Ray Subsystem shutdown; Apr 17, 2026 LECP shutdown; current MAG + PWS operating configuration.
+- **NASA (Oct 29, 2026)**, *NASA's Voyager 1 Conserves Power, Resolves Brief Communications Pause* — September 2026 "Big Bang" power swap; October 18–20 communications pause; one light-day milestone. <https://science.nasa.gov/blogs/voyager/2026/10/29/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/>
+- **NASA**, *What Is a Light-Day?* — milestone time and distance. <https://science.nasa.gov/mission/voyager/voyager-1/voyager-1-what-is-a-light-day/>
+- **NASA**, *Voyager Frequently Asked Questions* — Jupiter ring discovery, AC+79 3888 (Gliese 445) encounter distance, fault-protection share of computer memory. <https://science.nasa.gov/mission/voyager/frequently-asked-questions/>
 - **Carl Sagan**, *Pale Blue Dot: A Vision of the Human Future in Space* (Random House, 1994).
 - **NASA Voyager Golden Record materials (1977)** — committee chaired by Carl Sagan, with Ann Druyan, Frank Drake, Jon Lomberg, Timothy Ferris, Linda Salzman Sagan, and colleagues.
 
@@ -277,3 +285,11 @@ This page synthesizes NASA mission material, Carl Sagan's writings, and publicly
 ### A note on the leadership commentary
 
 The "Leadership Insights" callouts and the closing field guide are interpretive reflections, not NASA positions. They are written for builders, engineers, and operators of long-lived systems, drawing on the public record of the Voyager program.
+
+### Revision history
+
+- **Revision 3 — 1 November 2026.** Added the one light-day milestone (18 Nov 2026, 10:16 UTC) to "About time", with a live countdown and a link to the new light-day explainer; added the September 2026 "Big Bang" power swap and the October 18–20, 2026 communications pause. Corrections: Jupiter "four faint rings" changed to "a faint ring system"; Gliese 445 passing distance changed from 1.6 to 1.7 light-years, per NASA; "48 years" and "48-year mission" changed to 49; light-time wording updated now that the signal takes a full day.
+- **Revision 2 — 11 May 2026.** Added the Pale Blue Dot figure (2020 reprocessed, PIA23645), tightened the Leadership Insights callouts, and refined the epilogue.
+- **Revision 1 — 11 May 2026.** First published.
+
+*Site-wide navigation, footer, and scroll-button changes (May and October 2026) did not alter the text and are not listed.*
